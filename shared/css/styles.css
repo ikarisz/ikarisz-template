@@ -262,6 +262,15 @@ html, body {
 }
 
 /* ==========================================================================
+   Clean Embedded Mode (Hides duplicate dev-tools when inside master iframe)
+   ========================================================================== */
+.inside-iframe .saas-dev-tools,
+.inside-iframe .store-dev-tools,
+.inside-iframe .ai-dev-tools {
+  display: none !important;
+}
+
+/* ==========================================================================
    GitHub Repository Pill & Star Badge (Rigen Ember Console Dark Glass 3D)
    ========================================================================== */
 .github-repo-btn {

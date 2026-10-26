@@ -2,6 +2,14 @@
  * ikarisz Vector Icon System
  * 100% Zero Unicode Emojis - Pure Crisp Geometric SVG
  */
+
+// Auto-detect iframe embedding to seamlessly hide duplicate subtemplate toolbars
+try {
+  if (window.self !== window.top) {
+    document.documentElement.classList.add('inside-iframe');
+  }
+} catch (e) {}
+
 const IkariszIcons = {
   logo: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
     <rect width="24" height="24" rx="6" fill="#2563EB"/>

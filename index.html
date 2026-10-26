@@ -421,12 +421,6 @@
       document.getElementById('active-template-name').innerText = meta.name;
     }
 
-      const meta = fileMap[templateKey];
-      iframe.src = meta.file;
-      standaloneBtn.href = meta.file;
-      document.getElementById('active-template-name').innerText = meta.name;
-    }
-
     function setDevice(device) {
       activeDevice = device;
       const wrapper = document.getElementById('viewport-wrapper');
