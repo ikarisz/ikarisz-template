@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ikarisz Cloud & Analytics - Ember Console</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    /* Rigen Ember Console SaaS styling */
+    .saas-layout {
+      display: flex;
+      min-height: 100%;
+      background-color: var(--canvas);
+      color: var(--text-primary);
+    }
+    .saas-sidebar {
+      width: 264px;
+      background-color: var(--surface);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+    }
+    .saas-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      background-color: var(--canvas);
+    }
+    .saas-topbar {
+      height: 64px;
+      background-color: rgba(18, 16, 15, 0.85);
+      backdrop-filter: blur(16px) saturate(115%);
+      -webkit-backdrop-filter: blur(16px) saturate(115%);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+    .saas-content {
+      padding: 28px 32px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+    .card {
+      background: var(--surface-raised-glass);
+      backdrop-filter: blur(16px) saturate(115%);
+      -webkit-backdrop-filter: blur(16px) saturate(115%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-module);
+      padding: 20px;
+      box-shadow: var(--inner-bevel), var(--shadow-md);
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border-radius: var(--radius-control);
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 140ms ease-out;
+      margin-bottom: 4px;
+    }
+    .nav-item:hover {
+      background-color: var(--surface-hover);
+      color: var(--text-primary);
+    }
+    .nav-item.active {
+      background-color: var(--surface-raised);
+      border-color: var(--border-strong);
+      color: #FFFFFF;
+      font-weight: 600;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-width: 1px;
+      border-style: solid;
+    }
+    .status-Active {
+      background-color: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--success);
+    }
+    .status-Deploying {
+      background-color: var(--cta-subtle-bg);
+      border-color: var(--cta-subtle-border);
+      color: var(--cta-subtle-text);
+    }
+    .status-Testing {
+      background-color: var(--warning-bg);
+      border-color: var(--warning-border);
+      color: var(--warning);
+    }
+    .status-Idle {
+      background-color: var(--surface-raised);
+      border-color: var(--border-subtle);
+      color: var(--text-muted);
+    }
+    /* Chart Styles - Solid Royal Blue, Zero Gradient */
+    .chart-bar {
+      fill: var(--cta-primary);
+      transition: height 0.3s ease, y 0.3s ease, fill 0.15s ease;
+      cursor: pointer;
+    }
+    .chart-bar:hover {
+      fill: var(--cta-hover);
+    }
+    .chart-grid-line {
+      stroke: var(--border-subtle);
+      stroke-width: 1;
+    }
+    .chart-axis-text {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      fill: var(--text-muted);
+    }
+
+    /* Responsive Breakpoints for Tablet & Mobile */
+    .saas-menu-btn {
+      display: none;
+      border: 1px solid var(--border-subtle);
+      background: var(--surface-raised);
+      border-radius: var(--radius-control);
+      padding: 6px;
+      cursor: pointer;
+      color: var(--text-primary);
+      align-items: center;
+      justify-content: center;
+    }
+    .sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(8, 8, 7, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 45;
+    }
+
+    @media (max-width: 1024px) {
+      .saas-menu-btn {
+        display: inline-flex;
+      }
+      .saas-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 50;
+        transform: translateX(-100%);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: var(--shadow-modal);
+      }
+      .saas-sidebar.open {
+        transform: translateX(0);
+      }
+      .sidebar-backdrop.open {
+        display: block;
+      }
+      .saas-content {
+        padding: 20px 20px;
+      }
+      #saas-kpi-container {
+        grid-template-columns: repeat(2, 1fr) !important;
+      }
+      .analytics-audit-grid {
+        grid-template-columns: 1fr !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .saas-dev-tools {
+        display: none !important;
+      }
+      .saas-topbar {
+        padding: 0 12px;
+        gap: 8px;
+      }
+      .saas-content {
+        padding: 16px 12px;
+      }
+      #saas-kpi-container {
+        grid-template-columns: 1fr !important;
+      }
+      .saas-header-row {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 14px;
+      }
+      .saas-header-actions {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+      }
+      .saas-search-box {
+        width: 160px !important;
+      }
+      .saas-search-box kbd {
+        display: none !important;
+      }
+      .user-profile-text {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="saas-layout">
+    <!-- Sidebar Backdrop for Tablet/Mobile -->
+    <div id="saas-sidebar-backdrop" class="sidebar-backdrop" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="saas-sidebar" class="saas-sidebar">
+      <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="saas-logo"></span>
+          <div>
+            <div style="font-weight: 700; font-size: 1.05rem; letter-spacing: -0.02em; color: var(--text-primary);">ikarisz</div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Cloud & Analytics</div>
+          </div>
+        </div>
+        <button class="saas-menu-btn" style="border: none; background: transparent;" onclick="toggleSidebar()">
+          <span id="icon-close-sidebar"></span>
+        </button>
+      </div>
+
+      <div style="padding: 16px 16px; flex: 1; overflow-y: auto;">
+        <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-subdued); text-transform: uppercase; letter-spacing: 0.05em; padding: 0 8px 8px;">Main Workspace</div>
+        <div class="nav-item active" onclick="switchNav(this)">
+          <span id="icon-dash"></span> Overview
+        </div>
+        <div class="nav-item" onclick="switchNav(this)">
+          <span id="icon-analytics"></span> Telemetry & Metrics
+        </div>
+        <div class="nav-item" onclick="switchNav(this)">
+          <span id="icon-server"></span> Microservices
+        </div>
+        <div class="nav-item" onclick="switchNav(this)">
+          <span id="icon-database"></span> Storage & DB
+        </div>
+        <div class="nav-item" onclick="switchNav(this)">
+          <span id="icon-activity"></span> Audit Trail
+        </div>
+
+        <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-subdued); text-transform: uppercase; letter-spacing: 0.05em; padding: 20px 8px 8px;">Management</div>
+        <div class="nav-item" onclick="switchNav(this)">
+          <span id="icon-shield"></span> Security & IAM
+        </div>
+        <div class="nav-item" onclick="switchNav(this)">
+          <span id="icon-settings"></span> Cluster Settings
+        </div>
+      </div>
+
+      <!-- Resource Allocation Meter -->
+      <div style="padding: 16px; border-top: 1px solid var(--border-subtle); background-color: var(--surface);">
+        <div style="display: flex; justify-content: space-between; font-size: 0.75rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">
+          <span>Cluster Capacity</span>
+          <span style="color: #60A5FA;">74%</span>
+        </div>
+        <div style="height: 6px; background-color: var(--surface-pressed); border-radius: 9999px; overflow: hidden; margin-bottom: 12px; border: 1px solid var(--border-subtle);">
+          <div style="width: 74%; height: 100%; background-color: var(--cta-primary);"></div>
+        </div>
+        <button class="btn-secondary" style="width: 100%; font-size: 0.75rem; padding: 6px 10px;" onclick="showToast('Upgrade dialog opened')">Upgrade Nodes</button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="saas-main">
+      <!-- Topbar -->
+      <header class="saas-topbar">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <!-- Hamburger Menu for Mobile/Tablet -->
+          <button class="saas-menu-btn" onclick="toggleSidebar()" title="Toggle Menu">
+            <span id="icon-menu"></span>
+          </button>
+
+          <div class="saas-search-box" style="display: flex; align-items: center; gap: 8px; background-color: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); padding: 6px 12px; width: 260px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);">
+            <span id="icon-search" style="color: var(--text-muted);"></span>
+            <input id="searchInput" type="text" placeholder="Search services..." style="border: none; background: transparent; outline: none; font-size: 0.8125rem; width: 100%; color: var(--text-primary);" oninput="handleSearch(this.value)" />
+            <kbd style="font-size: 0.65rem; background-color: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 4px; padding: 2px 4px; color: var(--text-muted);">Ctrl+K</kbd>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <!-- Dev Tools (Hidden on Mobile) -->
+          <div class="saas-dev-tools" style="display: flex; align-items: center; gap: 8px;">
+            <button id="btn-toggle-skeleton" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="toggleSkeleton()">
+              <span id="icon-refresh"></span>
+              <span id="skeleton-btn-label">Skeleton</span>
+            </button>
+
+            <button class="btn-subtle" style="font-size: 0.75rem; padding: 6px 10px;" onclick="simulateDataReload()">
+              Simulate
+            </button>
+
+            <a href="https://github.com/ikarisz/ikarisz-template" target="_blank" rel="noopener noreferrer" class="github-repo-btn" style="text-decoration: none; padding: 5px 9px;" title="View repository on GitHub">
+              <span id="icon-saas-github" style="display: flex; align-items: center;"></span>
+              <span class="github-star-pill" style="padding: 1px 6px;">
+                <span id="icon-saas-star" style="display: flex; align-items: center;"></span>
+                <span id="saas-stars-count">0</span>
+              </span>
+            </a>
+
+            <div style="width: 1px; height: 18px; background-color: var(--border-subtle);"></div>
+          </div>
+
+          <!-- User Avatar -->
+          <div style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 6px; border-radius: 8px;" onclick="showToast('Signed in as Napat P. (Admin)')">
+            <div style="width: 32px; height: 32px; border-radius: 9999px; background-color: var(--cta-primary); color: #FFFFFF; font-weight: 600; font-size: 0.8125rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+              NP
+            </div>
+            <div class="user-profile-text" style="text-align: left;">
+              <div style="font-size: 0.8125rem; font-weight: 600; color: var(--text-primary); line-height: 1.1;">Napat P.</div>
+              <div style="font-size: 0.7rem; color: var(--text-muted);">Site Reliability</div>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard View Content -->
+      <main class="saas-content">
+        <!-- Breadcrumb / Header Title -->
+        <div class="saas-header-row" style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+          <div>
+            <h1 style="font-size: 1.5rem; font-weight: 700; color: var(--text-primary); margin: 0; letter-spacing: -0.02em;">ikarisz Global Telemetry</h1>
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin: 4px 0 0 0;">Real-time infrastructure health and operational metrics</p>
+          </div>
+          <div class="saas-header-actions" style="display: flex; align-items: center; gap: 10px;">
+            <button class="btn-secondary" onclick="exportDataReport()">
+              <span id="icon-download"></span> Export
+            </button>
+            <button class="btn-primary" onclick="openDeployModal()">
+              <span id="icon-plus"></span> New Service
+            </button>
+          </div>
+        </div>
+
+        <!-- Metric KPI Cards (Data View vs Skeleton View) -->
+        <div id="saas-kpi-container" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+          <!-- Dynamically populated or rendered as skeleton -->
+        </div>
+
+        <!-- Analytics Chart & Audit Log -->
+        <div class="analytics-audit-grid" style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 24px;">
+          <!-- Interactive Solid Bar Chart Card -->
+          <div class="card" id="chart-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <div>
+                <h2 style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0;">Throughput & Revenue Trajectory</h2>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">Ember Console Metrics (Solid Royal Blue CTA)</div>
+              </div>
+              <div style="display: flex; background-color: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); padding: 2px;">
+                <button id="chart-tab-rev" class="btn-secondary" style="border: none; padding: 4px 10px; font-size: 0.75rem; background-color: var(--surface-raised); font-weight: 600; color: #FFFFFF;" onclick="switchChartTab('revenue')">MRR Growth</button>
+                <button id="chart-tab-req" class="btn-secondary" style="border: none; padding: 4px 10px; font-size: 0.75rem; background: transparent; color: var(--text-muted); box-shadow: none;" onclick="switchChartTab('requests')">API Volume</button>
+              </div>
+            </div>
+
+            <!-- SVG Bar Chart -->
+            <div id="chart-render-area" style="height: 220px; width: 100%;">
+              <!-- Generated via JS -->
+            </div>
+          </div>
+
+          <!-- Audit Activity Feed -->
+          <div class="card" id="audit-card">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+              <h2 style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0;">Security Audit Log</h2>
+              <span class="status-badge status-Active">Live Sync</span>
+            </div>
+            <div id="audit-list-container" style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Generated via JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Deployments Data Table -->
+        <div class="card" id="table-card">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <h2 style="font-size: 1rem; font-weight: 600; color: var(--text-primary); margin: 0;">Deployed Microservices</h2>
+              <div style="font-size: 0.75rem; color: var(--text-muted);">Authoritative server clusters and edge workers</div>
+            </div>
+
+            <!-- Table Filters -->
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 500;">Status:</span>
+              <button class="btn-secondary filter-pill active" style="font-size: 0.75rem; padding: 4px 10px; border-color: #2563EB; color: #60A5FA; background-color: var(--surface-pressed);" onclick="filterStatus('All', this)">All</button>
+              <button class="btn-secondary filter-pill" style="font-size: 0.75rem; padding: 4px 10px;" onclick="filterStatus('Active', this)">Active</button>
+              <button class="btn-secondary filter-pill" style="font-size: 0.75rem; padding: 4px 10px;" onclick="filterStatus('Deploying', this)">Deploying</button>
+              <button class="btn-secondary filter-pill" style="font-size: 0.75rem; padding: 4px 10px;" onclick="filterStatus('Testing', this)">Testing</button>
+            </div>
+          </div>
+
+          <!-- Responsive Table Container -->
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.8125rem;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-subtle); color: var(--text-muted);">
+                  <th style="padding: 10px 14px; font-weight: 600;">Service Name</th>
+                  <th style="padding: 10px 14px; font-weight: 600;">Cluster / Region</th>
+                  <th style="padding: 10px 14px; font-weight: 600;">Release</th>
+                  <th style="padding: 10px 14px; font-weight: 600;">Status</th>
+                  <th style="padding: 10px 14px; font-weight: 600;">CPU</th>
+                  <th style="padding: 10px 14px; font-weight: 600;">RAM</th>
+                  <th style="padding: 10px 14px; font-weight: 600;">Updated</th>
+                  <th style="padding: 10px 14px; font-weight: 600; text-align: right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="deployments-tbody">
+                <!-- Dynamically populated or rendered as skeleton -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Table Pagination Footer -->
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-subtle); font-size: 0.75rem; color: var(--text-muted);">
+            <div id="table-entries-count">Showing 6 of 6 microservices</div>
+            <div style="display: flex; gap: 6px;">
+              <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 10px;" disabled>Previous</button>
+              <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 10px; background-color: var(--cta-primary); color: #FFFFFF; border-color: #3B82F6;">1</button>
+              <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 10px;" disabled>Next</button>
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Deploy Service Modal -->
+  <div id="deploy-modal" style="display: none; position: fixed; inset: 0; background-color: rgba(8, 8, 7, 0.75); backdrop-filter: blur(10px); z-index: 999; align-items: center; justify-content: center;">
+    <div style="background-color: var(--surface-raised); border-radius: var(--radius-modal); width: 480px; max-width: 90%; padding: 24px; box-shadow: var(--shadow-modal); border: 1px solid var(--border-strong);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <h3 style="margin: 0; font-size: 1.125rem; font-weight: 700; color: var(--text-primary);">Deploy Microservice</h3>
+        <button style="border: none; background: transparent; cursor: pointer; color: var(--text-muted);" onclick="closeDeployModal()">
+          <span id="modal-close-icon"></span>
+        </button>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Service Identifier</label>
+        <input id="new-service-name" type="text" placeholder="e.g. telemetry-streamer-edge" style="width: 100%; border: 1px solid var(--border-subtle); background-color: var(--surface); color: var(--text-primary); border-radius: var(--radius-control); padding: 8px 12px; font-size: 0.875rem; outline: none;" />
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Target Cluster</label>
+        <select id="new-service-region" style="width: 100%; border: 1px solid var(--border-subtle); background-color: var(--surface); color: var(--text-primary); border-radius: var(--radius-control); padding: 8px 12px; font-size: 0.875rem; outline: none;">
+          <option>Production-US-East</option>
+          <option>Production-EU-Central</option>
+          <option>Production-Global</option>
+          <option>Cluster-AP-East</option>
+        </select>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 0.8125rem; font-weight: 600; color: var(--text-muted); margin-bottom: 6px;">Resource Tier</label>
+        <select id="new-service-tier" style="width: 100%; border: 1px solid var(--border-subtle); background-color: var(--surface); color: var(--text-primary); border-radius: var(--radius-control); padding: 8px 12px; font-size: 0.875rem; outline: none;">
+          <option>Standard (1 vCPU, 512MB RAM)</option>
+          <option>Performance (2 vCPU, 2048MB RAM)</option>
+          <option>High Memory (4 vCPU, 8192MB RAM)</option>
+        </select>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button class="btn-secondary" onclick="closeDeployModal()">Cancel</button>
+        <button class="btn-primary" onclick="confirmDeploy()">Deploy Instance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="icons.js"></script>
+  <script src="mock-data.js"></script>
+  <script>
+    let isSkeletonActive = false;
+    let currentChartMetric = 'revenue';
+    let currentFilter = 'All';
+    let deploymentsList = [...IkariszData.saas.deployments];
+
+    function initIcons() {
+      document.getElementById('saas-logo').innerHTML = IkariszIcons.logo;
+      document.getElementById('icon-dash').innerHTML = IkariszIcons.dashboard;
+      document.getElementById('icon-analytics').innerHTML = IkariszIcons.analytics;
+      document.getElementById('icon-server').innerHTML = IkariszIcons.server;
+      document.getElementById('icon-database').innerHTML = IkariszIcons.database;
+      document.getElementById('icon-activity').innerHTML = IkariszIcons.activity;
+      document.getElementById('icon-shield').innerHTML = IkariszIcons.shield;
+      document.getElementById('icon-settings').innerHTML = IkariszIcons.settings;
+      document.getElementById('icon-search').innerHTML = IkariszIcons.search;
+      document.getElementById('icon-refresh').innerHTML = IkariszIcons.refresh;
+      document.getElementById('icon-download').innerHTML = IkariszIcons.download;
+      document.getElementById('icon-plus').innerHTML = IkariszIcons.plus;
+      document.getElementById('modal-close-icon').innerHTML = IkariszIcons.x;
+      if (document.getElementById('icon-menu')) document.getElementById('icon-menu').innerHTML = IkariszIcons.menu;
+      if (document.getElementById('icon-close-sidebar')) document.getElementById('icon-close-sidebar').innerHTML = IkariszIcons.x;
+      if (document.getElementById('icon-saas-github')) document.getElementById('icon-saas-github').innerHTML = IkariszIcons.github;
+      if (document.getElementById('icon-saas-star')) document.getElementById('icon-saas-star').innerHTML = IkariszIcons.star;
+      fetchGitHubStars();
+    }
+
+    async function fetchGitHubStars() {
+      const starEl = document.getElementById('saas-stars-count');
+      if (!starEl) return;
+      try {
+        const res = await fetch('https://api.github.com/repos/ikarisz/ikarisz-template');
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.stargazers_count === 'number') {
+            starEl.textContent = data.stargazers_count;
+          }
+        }
+      } catch (e) {}
+    }
+
+    function toggleSidebar() {
+      const sidebar = document.getElementById('saas-sidebar');
+      const backdrop = document.getElementById('saas-sidebar-backdrop');
+      sidebar.classList.toggle('open');
+      backdrop.classList.toggle('open');
+    }
+
+    function renderKPICards() {
+      const container = document.getElementById('saas-kpi-container');
+      if (isSkeletonActive) {
+        container.innerHTML = Array(4).fill(0).map(() => `
+          <div class="card" style="padding: 18px;">
+            <div class="skeleton-text" style="width: 50%; height: 12px; margin-bottom: 12px;"></div>
+            <div class="skeleton-text" style="width: 75%; height: 28px; margin-bottom: 10px;"></div>
+            <div class="skeleton-text" style="width: 40%; height: 10px;"></div>
+          </div>
+        `).join('');
+        return;
+      }
+
+      container.innerHTML = IkariszData.saas.stats.map(stat => `
+        <div class="card" style="padding: 18px;">
+          <div style="font-size: 0.8125rem; font-weight: 500; color: var(--text-muted); margin-bottom: 8px;">${stat.title}</div>
+          <div style="font-size: 1.75rem; font-weight: 700; color: var(--text-primary); letter-spacing: -0.03em; margin-bottom: 8px;">${stat.value}</div>
+          <div style="display: flex; align-items: center; gap: 6px; font-size: 0.75rem;">
+            <span style="color: #60A5FA; font-weight: 600;">${stat.change}</span>
+            <span style="color: var(--text-muted);">${stat.period}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderChart() {
+      const area = document.getElementById('chart-render-area');
+      if (isSkeletonActive) {
+        area.innerHTML = `
+          <div style="display: flex; align-items: flex-end; gap: 12px; height: 100%; padding-top: 20px;">
+            ${Array(12).fill(0).map((_, i) => `
+              <div class="skeleton-box" style="flex: 1; height: ${20 + (i * 7) % 80}%;"></div>
+            `).join('')}
+          </div>
+        `;
+        return;
+      }
+
+      const raw = currentChartMetric === 'revenue' ? IkariszData.saas.chartData.revenue : IkariszData.saas.chartData.requests;
+      const labels = IkariszData.saas.chartData.labels;
+      const maxVal = Math.max(...raw) * 1.15;
+      const chartHeight = 180;
+      const chartWidth = 720;
+      const barWidth = 36;
+      const gap = (chartWidth - (raw.length * barWidth)) / (raw.length + 1);
+
+      let barsSvg = '';
+      raw.forEach((val, i) => {
+        const h = (val / maxVal) * chartHeight;
+        const x = gap + i * (barWidth + gap);
+        const y = chartHeight - h;
+        barsSvg += `
+          <rect class="chart-bar" x="${x}" y="${y}" width="${barWidth}" height="${h}" rx="6">
+            <title>${labels[i]}: ${val} ${currentChartMetric === 'revenue' ? 'k USD' : 'k req'}</title>
+          </rect>
+          <text class="chart-axis-text" x="${x + (barWidth / 2)}" y="${chartHeight + 16}" text-anchor="middle">${labels[i]}</text>
+        `;
+      });
+
+      area.innerHTML = `
+        <svg viewBox="0 0 ${chartWidth} ${chartHeight + 24}" style="width: 100%; height: 100%; overflow: visible;">
+          <line class="chart-grid-line" x1="0" y1="0" x2="${chartWidth}" y2="0" />
+          <line class="chart-grid-line" x1="0" y1="${chartHeight / 2}" x2="${chartWidth}" y2="${chartHeight / 2}" />
+          <line class="chart-grid-line" x1="0" y1="${chartHeight}" x2="${chartWidth}" y2="${chartHeight}" />
+          ${barsSvg}
+        </svg>
+      `;
+    }
+
+    function renderAuditLog() {
+      const container = document.getElementById('audit-list-container');
+      if (isSkeletonActive) {
+        container.innerHTML = Array(4).fill(0).map(() => `
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <div class="skeleton-circle" style="width: 28px; height: 28px; flex-shrink: 0;"></div>
+            <div style="flex: 1;">
+              <div class="skeleton-text" style="width: 90%; height: 10px;"></div>
+              <div class="skeleton-text" style="width: 40%; height: 8px;"></div>
+            </div>
+          </div>
+        `).join('');
+        return;
+      }
+
+      container.innerHTML = IkariszData.saas.auditLogs.map(item => `
+        <div style="display: flex; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border-subtle); font-size: 0.8125rem;">
+          <div style="width: 26px; height: 26px; border-radius: var(--radius-full); background-color: rgba(37, 99, 235, 0.15); border: 1px solid rgba(37, 99, 235, 0.35); color: #60A5FA; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.7rem; font-weight: 700;">
+            ik
+          </div>
+          <div style="flex: 1;">
+            <div style="color: var(--text-primary); font-weight: 500; line-height: 1.35;">${item.action}</div>
+            <div style="color: var(--text-muted); font-size: 0.7rem; margin-top: 2px;">${item.actor} • ${item.time}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('deployments-tbody');
+      if (isSkeletonActive) {
+        tbody.innerHTML = Array(5).fill(0).map(() => `
+          <tr style="border-bottom: 1px solid var(--border-subtle);">
+            <td style="padding: 12px 14px;"><div class="skeleton-text" style="width: 140px;"></div></td>
+            <td style="padding: 12px 14px;"><div class="skeleton-text" style="width: 110px;"></div></td>
+            <td style="padding: 12px 14px;"><div class="skeleton-text" style="width: 50px;"></div></td>
+            <td style="padding: 12px 14px;"><div class="skeleton-text" style="width: 70px; border-radius: 9999px;"></div></td>
+            <td style="padding: 12px 14px;"><div class="skeleton-text" style="width: 40px;"></div></td>
+            <td style="padding: 12px 14px;"><div class="skeleton-text" style="width: 60px;"></div></td>
+            <td style="padding: 12px 14px;"><div class="skeleton-text" style="width: 70px;"></div></td>
+            <td style="padding: 12px 14px; text-align: right;"><div class="skeleton-text" style="width: 50px; margin-left: auto;"></div></td>
+          </tr>
+        `).join('');
+        return;
+      }
+
+      const filtered = deploymentsList.filter(item => {
+        if (currentFilter !== 'All' && item.status !== currentFilter) return false;
+        return true;
+      });
+
+      document.getElementById('table-entries-count').innerText = `Showing ${filtered.length} of ${deploymentsList.length} microservices`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 24px; color: var(--text-muted);">No microservices match current criteria.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(dep => `
+        <tr style="border-bottom: 1px solid var(--border-subtle); transition: background-color 0.15s ease;">
+          <td style="padding: 12px 14px; font-weight: 600; color: var(--text-primary); font-family: var(--font-mono); font-size: 0.75rem;">${dep.name}</td>
+          <td style="padding: 12px 14px; color: var(--text-muted);">${dep.env}</td>
+          <td style="padding: 12px 14px; color: var(--text-muted); font-family: var(--font-mono); font-size: 0.75rem;">${dep.version}</td>
+          <td style="padding: 12px 14px;">
+            <span class="status-badge status-${dep.status}">${dep.status}</span>
+          </td>
+          <td style="padding: 12px 14px; color: var(--text-primary);">${dep.cpu}</td>
+          <td style="padding: 12px 14px; color: var(--text-muted);">${dep.ram}</td>
+          <td style="padding: 12px 14px; color: var(--text-muted);">${dep.updated}</td>
+          <td style="padding: 12px 14px; text-align: right;">
+            <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 8px;" onclick="restartService('${dep.name}')">Restart</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function switchChartTab(tab) {
+      currentChartMetric = tab;
+      document.getElementById('chart-tab-rev').style.backgroundColor = tab === 'revenue' ? 'var(--surface-raised)' : 'transparent';
+      document.getElementById('chart-tab-rev').style.color = tab === 'revenue' ? '#FFFFFF' : 'var(--text-muted)';
+      document.getElementById('chart-tab-req').style.backgroundColor = tab === 'requests' ? 'var(--surface-raised)' : 'transparent';
+      document.getElementById('chart-tab-req').style.color = tab === 'requests' ? '#FFFFFF' : 'var(--text-muted)';
+      renderChart();
+    }
+
+    function toggleSkeleton() {
+      isSkeletonActive = !isSkeletonActive;
+      document.getElementById('skeleton-btn-label').innerText = isSkeletonActive ? 'Disable Skeleton' : 'Skeleton';
+      renderKPICards();
+      renderChart();
+      renderAuditLog();
+      renderTable();
+      showToast(isSkeletonActive ? 'Skeleton Loading State Active' : 'Real Data State Restored');
+    }
+
+    function simulateDataReload() {
+      isSkeletonActive = true;
+      renderKPICards();
+      renderChart();
+      renderAuditLog();
+      renderTable();
+      showToast('Simulating asynchronous telemetry stream...');
+
+      setTimeout(() => {
+        isSkeletonActive = false;
+        renderKPICards();
+        renderChart();
+        renderAuditLog();
+        renderTable();
+        showToast('Telemetry stream successfully updated');
+      }, 1200);
+    }
+
+    function filterStatus(status, elem) {
+      currentFilter = status;
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.style.backgroundColor = 'var(--surface-raised)';
+        btn.style.borderColor = 'var(--border-subtle)';
+        btn.style.color = 'var(--text-muted)';
+      });
+      elem.style.backgroundColor = 'var(--surface-pressed)';
+      elem.style.borderColor = '#2563EB';
+      elem.style.color = '#60A5FA';
+      renderTable();
+    }
+
+    function handleSearch(query) {
+      const q = query.toLowerCase().trim();
+      deploymentsList = IkariszData.saas.deployments.filter(item => {
+        return item.name.toLowerCase().includes(q) || item.env.toLowerCase().includes(q);
+      });
+      renderTable();
+    }
+
+    function switchNav(elem) {
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+      elem.classList.add('active');
+    }
+
+    function restartService(name) {
+      showToast(`Initiating rolling reboot for: ${name}`);
+    }
+
+    function exportDataReport() {
+      showToast('Downloading ikarisz-telemetry-report.csv');
+    }
+
+    function openDeployModal() {
+      document.getElementById('deploy-modal').style.display = 'flex';
+    }
+
+    function closeDeployModal() {
+      document.getElementById('deploy-modal').style.display = 'none';
+    }
+
+    function confirmDeploy() {
+      const name = document.getElementById('new-service-name').value.trim() || 'worker-' + Math.floor(Math.random() * 9000 + 1000);
+      const region = document.getElementById('new-service-region').value;
+      deploymentsList.unshift({
+        name: name,
+        env: region,
+        version: "v1.0.0",
+        status: "Active",
+        cpu: "5%",
+        ram: "512 MB",
+        updated: "Just now"
+      });
+      closeDeployModal();
+      renderTable();
+      showToast(`Successfully deployed ${name} to ${region}!`);
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<span style="color: #60A5FA;">${IkariszIcons.check}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 250);
+      }, 3000);
+    }
+
+    // Initialize
+    window.addEventListener('DOMContentLoaded', () => {
+      initIcons();
+      renderKPICards();
+      renderChart();
+      renderAuditLog();
+      renderTable();
+    });
+  </script>
+</body>
+</html>

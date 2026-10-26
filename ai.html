@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ikarisz Intelligence - Ember Console</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: var(--canvas);
+      color: var(--text-primary);
+    }
+    .ai-layout {
+      display: flex;
+      height: 100%;
+      max-height: 100%;
+      background-color: var(--canvas);
+      overflow: hidden;
+    }
+    .ai-sidebar {
+      width: 280px;
+      background-color: var(--surface);
+      border-right: 1px solid var(--border-subtle);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      height: 100%;
+    }
+    .ai-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      max-height: 100%;
+      background-color: var(--canvas);
+      position: relative;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .ai-header {
+      height: 56px;
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background-color: rgba(18, 16, 15, 0.85);
+      backdrop-filter: blur(16px) saturate(115%);
+      -webkit-backdrop-filter: blur(16px) saturate(115%);
+      flex-shrink: 0;
+      gap: 12px;
+    }
+    .ai-chat-thread {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    .ai-thread-inner {
+      width: 100%;
+      max-width: 800px;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .message-user {
+      align-self: flex-end;
+      max-width: 80%;
+      background-color: var(--surface-raised);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px 14px 4px 14px;
+      padding: 12px 18px;
+      color: var(--text-primary);
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      word-break: break-word;
+      box-shadow: var(--inner-highlight), var(--shadow-sm);
+    }
+    .message-assistant {
+      align-self: flex-start;
+      width: 100%;
+      min-width: 0;
+      display: flex;
+      gap: 12px;
+    }
+    .message-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 8px;
+      background-color: var(--cta-primary);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.75rem;
+      font-weight: 700;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+    }
+    .message-body {
+      flex: 1;
+      min-width: 0;
+      max-width: 100%;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+      color: var(--text-primary);
+      overflow: hidden;
+    }
+    .code-block {
+      background-color: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+      margin: 12px 0;
+      overflow: hidden;
+      font-family: var(--font-mono);
+      font-size: 0.8125rem;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+    }
+    .code-header {
+      background-color: var(--surface-raised);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .code-content {
+      padding: 14px 16px;
+      margin: 0;
+      overflow-x: auto;
+      max-width: 100%;
+      white-space: pre;
+      -webkit-overflow-scrolling: touch;
+      color: var(--text-primary);
+      line-height: 1.45;
+    }
+    .code-content code {
+      white-space: pre;
+    }
+    .prompt-card {
+      background: var(--surface-raised-glass);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+      padding: 14px;
+      cursor: pointer;
+      box-shadow: var(--inner-highlight), var(--shadow-sm);
+      transition: all 140ms ease-out;
+      text-align: left;
+    }
+    .prompt-card:hover {
+      border-color: var(--border-strong);
+      background-color: var(--surface-hover);
+      transform: translateY(-1px);
+    }
+    .ai-input-wrapper {
+      padding: 12px 18px 14px;
+      background-color: rgba(18, 16, 15, 0.88);
+      backdrop-filter: blur(16px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex-shrink: 0;
+      width: 100%;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .ai-input-box {
+      width: 100%;
+      max-width: 800px;
+      background-color: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+      transition: border-color 140ms ease-out;
+    }
+    .ai-input-box:focus-within {
+      border-color: #2563EB;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5), 0 0 0 1px #2563EB;
+    }
+    .chat-history-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      border-radius: var(--radius-control);
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-decoration: none;
+      border: 1px solid transparent;
+      transition: all 140ms ease-out;
+      margin-bottom: 2px;
+    }
+    .chat-history-item:hover {
+      background-color: var(--surface-hover);
+      color: var(--text-primary);
+    }
+    .chat-history-item.active {
+      background-color: var(--surface-raised);
+      border-color: var(--border-strong);
+      color: #60A5FA;
+      font-weight: 600;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    }
+
+    /* AI Responsive Breakpoints for Tablet & Mobile */
+    .ai-menu-btn {
+      display: none;
+      border: 1px solid var(--border-subtle);
+      background: var(--surface-raised);
+      border-radius: var(--radius-control);
+      padding: 6px;
+      cursor: pointer;
+      color: var(--text-primary);
+      align-items: center;
+      justify-content: center;
+    }
+    .ai-sidebar-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background-color: rgba(8, 8, 7, 0.75);
+      backdrop-filter: blur(8px);
+      z-index: 45;
+    }
+    .prompt-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      width: 100%;
+    }
+    .ai-dev-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .ai-menu-btn {
+        display: inline-flex;
+      }
+      .ai-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 50;
+        transform: translateX(-100%);
+        transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: var(--shadow-modal);
+        width: 280px;
+      }
+      .ai-sidebar.open {
+        transform: translateX(0);
+      }
+      .ai-sidebar-backdrop.open {
+        display: block;
+      }
+      .ai-header {
+        padding: 0 14px;
+      }
+      .ai-chat-thread {
+        padding: 14px 12px;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .ai-dev-tools {
+        display: none !important;
+      }
+      .prompt-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .message-user {
+        max-width: 92%;
+        font-size: 0.875rem;
+        padding: 10px 14px;
+      }
+      .ai-header-badge {
+        display: none !important;
+      }
+      .ai-header {
+        padding: 0 12px;
+      }
+      .ai-input-wrapper {
+        padding: 8px 12px 10px;
+      }
+      .ai-disclaimer {
+        font-size: 0.65rem !important;
+        margin-top: 4px !important;
+        line-height: 1.2 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="ai-layout">
+    <!-- Mobile Sidebar Backdrop -->
+    <div id="ai-sidebar-backdrop" class="ai-sidebar-backdrop" onclick="toggleAISidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="ai-sidebar" class="ai-sidebar">
+      <div style="padding: 18px 20px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span id="ai-logo"></span>
+          <div>
+            <div style="font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; color: var(--text-primary);">ikarisz</div>
+            <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 600;">Intelligence Engine</div>
+          </div>
+        </div>
+        <button class="ai-menu-btn" style="border: none; background: transparent;" onclick="toggleAISidebar()">
+          <span id="icon-close-ai-sidebar"></span>
+        </button>
+      </div>
+
+      <!-- New Chat Button -->
+      <div style="padding: 16px 16px 8px;">
+        <button class="btn-primary" style="width: 100%; padding: 10px; font-size: 0.875rem;" onclick="startNewChat()">
+          <span id="icon-plus"></span> New Conversation
+        </button>
+      </div>
+
+      <!-- Model Switcher Selector -->
+      <div style="padding: 8px 16px 16px;">
+        <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-subdued); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Foundation Model</div>
+        <select id="model-select" style="width: 100%; background-color: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); padding: 7px 10px; font-size: 0.8125rem; color: var(--text-primary); outline: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);" onchange="handleModelChange(this.value)">
+          <!-- Options populated via JS -->
+        </select>
+      </div>
+
+      <!-- History List -->
+      <div style="flex: 1; overflow-y: auto; padding: 0 16px 16px;">
+        <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-subdued); text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 4px 6px;">Recent Sessions</div>
+        <div id="chat-history-container">
+          <!-- Populated via JS or skeleton -->
+        </div>
+      </div>
+
+      <!-- User Profile Footer -->
+      <div style="padding: 14px 16px; border-top: 1px solid var(--border-subtle); background-color: var(--surface); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="width: 32px; height: 32px; border-radius: var(--radius-control); background-color: var(--cta-primary); color: #FFFFFF; font-weight: 600; font-size: 0.8125rem; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.5);">
+            IK
+          </div>
+          <div>
+            <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-primary);">ikarisz Pro Tier</div>
+            <div style="font-size: 0.7rem; color: var(--success); font-weight: 600;">Active Identity</div>
+          </div>
+        </div>
+        <button style="border: none; background: transparent; cursor: pointer; color: var(--text-muted);" onclick="showToast('AI Settings: Ember Console')">
+          <span id="icon-settings"></span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Chat Workspace -->
+    <main class="ai-main">
+      <!-- Header -->
+      <header class="ai-header">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <!-- Mobile Menu Button -->
+          <button class="ai-menu-btn" onclick="toggleAISidebar()" title="Open Chat History">
+            <span id="icon-ai-menu"></span>
+          </button>
+
+          <span style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary);" id="current-model-badge">ikarisz 4.5 Turbo</span>
+          <span class="ai-header-badge" style="background-color: var(--cta-subtle-bg); border: 1px solid var(--cta-subtle-border); color: #60A5FA; font-size: 0.6875rem; font-weight: 600; padding: 2px 8px; border-radius: 9999px;">Ember Console Core</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <!-- Dev Tools (Hidden on Mobile) -->
+          <div class="ai-dev-tools">
+            <button id="btn-ai-skeleton" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="toggleAISkeleton()">
+              <span id="icon-refresh"></span>
+              <span id="ai-skeleton-label">Skeleton</span>
+            </button>
+
+            <button class="btn-subtle" style="font-size: 0.75rem; padding: 6px 10px;" onclick="simulateAIReload()">
+              Simulate
+            </button>
+
+            <a href="https://github.com/ikarisz/ikarisz-template" target="_blank" rel="noopener noreferrer" class="github-repo-btn" style="text-decoration: none; padding: 5px 9px;" title="View repository on GitHub">
+              <span id="icon-ai-github" style="display: flex; align-items: center;"></span>
+              <span class="github-star-pill" style="padding: 1px 6px;">
+                <span id="icon-ai-star" style="display: flex; align-items: center;"></span>
+                <span id="ai-stars-count">0</span>
+              </span>
+            </a>
+
+            <div style="width: 1px; height: 18px; background-color: var(--border-subtle);"></div>
+          </div>
+
+          <button class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="clearConversation()">
+            Clear
+          </button>
+        </div>
+      </header>
+
+      <!-- Chat Thread / Welcome Area -->
+      <div class="ai-chat-thread" id="chat-scroll-container">
+        <div class="ai-thread-inner" id="chat-messages-container">
+          <!-- Populated dynamically or as skeleton -->
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="ai-input-wrapper">
+        <div class="ai-input-box">
+          <textarea id="ai-user-input" rows="2" placeholder="Ask ikarisz AI anything about code, architecture, or game systems..." style="border: none; background: transparent; outline: none; resize: none; font-family: var(--font-sans); font-size: 0.9375rem; color: var(--text-primary); width: 100%; line-height: 1.4;" onkeydown="handleInputKeydown(event)"></textarea>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--border-subtle);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button style="border: none; background: transparent; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 4px;" onclick="showToast('Attachment upload simulated')" title="Attach files">
+                <span id="icon-paperclip"></span>
+              </button>
+              <span style="font-size: 0.75rem; color: var(--text-subdued);">Markdown & Code Syntax Supported</span>
+            </div>
+
+            <button id="btn-send-message" class="btn-primary" style="padding: 6px 14px; font-size: 0.8125rem; min-height: 32px;" onclick="submitMessage()">
+              <span>Send</span>
+              <span id="icon-send"></span>
+            </button>
+          </div>
+        </div>
+
+        <div class="ai-disclaimer" style="font-size: 0.7rem; color: var(--text-subdued); margin-top: 6px; text-align: center;">
+          ikarisz AI operates on server-authoritative models. Always verify system scripts prior to deployment.
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="icons.js"></script>
+  <script src="mock-data.js"></script>
+  <script>
+    let isAISkeleton = false;
+    let messages = [...IkariszData.ai.seedMessages];
+    let isGenerating = false;
+
+    function initAIIcons() {
+      document.getElementById('ai-logo').innerHTML = IkariszIcons.logo;
+      document.getElementById('icon-plus').innerHTML = IkariszIcons.plus;
+      document.getElementById('icon-refresh').innerHTML = IkariszIcons.refresh;
+      document.getElementById('icon-settings').innerHTML = IkariszIcons.settings;
+      document.getElementById('icon-paperclip').innerHTML = IkariszIcons.paperclip;
+      document.getElementById('icon-send').innerHTML = IkariszIcons.send;
+      if (document.getElementById('icon-ai-menu')) document.getElementById('icon-ai-menu').innerHTML = IkariszIcons.menu;
+      if (document.getElementById('icon-close-ai-sidebar')) document.getElementById('icon-close-ai-sidebar').innerHTML = IkariszIcons.x;
+      if (document.getElementById('icon-ai-github')) document.getElementById('icon-ai-github').innerHTML = IkariszIcons.github;
+      if (document.getElementById('icon-ai-star')) document.getElementById('icon-ai-star').innerHTML = IkariszIcons.star;
+      fetchGitHubStars();
+    }
+
+    async function fetchGitHubStars() {
+      const starEl = document.getElementById('ai-stars-count');
+      if (!starEl) return;
+      try {
+        const res = await fetch('https://api.github.com/repos/ikarisz/ikarisz-template');
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.stargazers_count === 'number') {
+            starEl.textContent = data.stargazers_count;
+          }
+        }
+      } catch (e) {}
+    }
+
+    function toggleAISidebar() {
+      const sidebar = document.getElementById('ai-sidebar');
+      const backdrop = document.getElementById('ai-sidebar-backdrop');
+      sidebar.classList.toggle('open');
+      backdrop.classList.toggle('open');
+    }
+
+    function initModelSelector() {
+      const select = document.getElementById('model-select');
+      select.innerHTML = IkariszData.ai.models.map(m => `
+        <option value="${m.id}">${m.name} (${m.badge})</option>
+      `).join('');
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('chat-history-container');
+      if (isAISkeleton) {
+        container.innerHTML = Array(4).fill(0).map(() => `
+          <div style="padding: 8px 12px; margin-bottom: 4px;">
+            <div class="skeleton-text" style="width: 85%; height: 12px; margin: 0;"></div>
+          </div>
+        `).join('');
+        return;
+      }
+
+      container.innerHTML = IkariszData.ai.conversations.map(conv => `
+        <div class="chat-history-item ${conv.active ? 'active' : ''}" onclick="selectConversation('${conv.id}', this)">
+          <div style="display: flex; align-items: center; gap: 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+            <span style="color: ${conv.active ? '#60A5FA' : 'var(--text-muted)'}; flex-shrink: 0;">${IkariszIcons.messageSquare}</span>
+            <span style="overflow: hidden; text-overflow: ellipsis;">${conv.title}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderMessages() {
+      const container = document.getElementById('chat-messages-container');
+
+      if (isAISkeleton) {
+        container.innerHTML = `
+          <!-- User Skeleton -->
+          <div style="align-self: flex-end; width: 60%; background-color: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 12px; padding: 16px;">
+            <div class="skeleton-text" style="width: 80%; height: 14px;"></div>
+            <div class="skeleton-text" style="width: 50%; height: 14px; margin: 0;"></div>
+          </div>
+
+          <!-- Assistant Skeleton -->
+          <div class="message-assistant">
+            <div class="skeleton-circle" style="width: 30px; height: 30px; flex-shrink: 0;"></div>
+            <div style="flex: 1;">
+              <div class="skeleton-text" style="width: 90%; height: 14px;"></div>
+              <div class="skeleton-text" style="width: 95%; height: 14px;"></div>
+              <div class="skeleton-box" style="height: 120px; margin: 14px 0;"></div>
+              <div class="skeleton-text" style="width: 70%; height: 14px;"></div>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (messages.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 40px 0 20px;">
+            <div style="width: 56px; height: 56px; border-radius: var(--radius-control); background-color: var(--cta-primary); color: #FFFFFF; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.6);">
+              ${IkariszIcons.logo}
+            </div>
+            <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0; letter-spacing: -0.02em;">How can ikarisz AI assist you today?</h1>
+            <p style="font-size: 0.875rem; color: var(--text-muted); margin: 6px 0 0 0;">High-contrast dark engineering console with tactile depth</p>
+          </div>
+
+          <div class="prompt-grid">
+            ${IkariszData.ai.prompts.map(p => `
+              <div class="prompt-card" onclick="usePromptPreset('${p.prompt.replace(/'/g, "\\'")}')">
+                <div style="font-weight: 700; font-size: 0.875rem; color: var(--text-primary); margin-bottom: 4px;">${p.title}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); line-height: 1.45;">${p.desc}</div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = messages.map((msg, index) => {
+        if (msg.role === 'user') {
+          return `
+            <div class="message-user">
+              ${escapeHtml(msg.text)}
+            </div>
+          `;
+        } else {
+          return `
+            <div class="message-assistant">
+              <div class="message-avatar">ik</div>
+              <div class="message-body">
+                ${formatAIMessage(msg.text)}
+                
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 12px;">
+                  <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 8px; min-height: 28px;" onclick="copyToClipboard('${escapeAttr(msg.text)}')">
+                    ${IkariszIcons.copy} Copy
+                  </button>
+                  <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 8px; min-height: 28px;" onclick="showToast('Feedback noted: Helpful')">
+                    ${IkariszIcons.thumbsUp}
+                  </button>
+                  <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 8px; min-height: 28px;" onclick="showToast('Feedback noted: Needs improvement')">
+                    ${IkariszIcons.thumbsDown}
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+        }
+      }).join('');
+
+      const scrollContainer = document.getElementById('chat-scroll-container');
+      scrollContainer.scrollTop = scrollContainer.scrollHeight;
+    }
+
+    function formatAIMessage(text) {
+      const parts = text.split(/(```[\s\S]*?```)/g);
+      return parts.map(part => {
+        if (part.startsWith('```')) {
+          const firstLineEnd = part.indexOf('\n');
+          const lang = part.substring(3, firstLineEnd).trim() || 'code';
+          const code = part.substring(firstLineEnd + 1, part.length - 3);
+          return `
+            <div class="code-block">
+              <div class="code-header">
+                <span>${lang}</span>
+                <button class="btn-secondary" style="font-size: 0.7rem; padding: 2px 8px; min-height: 24px;" onclick="copyToClipboard('${escapeAttr(code)}')">
+                  ${IkariszIcons.copy} Copy code
+                </button>
+              </div>
+              <pre class="code-content"><code>${escapeHtml(code)}</code></pre>
+            </div>
+          `;
+        } else {
+          let formatted = escapeHtml(part);
+          formatted = formatted.replace(/^### (.*$)/gim, '<h3 style="font-size: 1.05rem; font-weight: 700; margin: 14px 0 6px; color: var(--text-primary);">$1</h3>');
+          formatted = formatted.replace(/^## (.*$)/gim, '<h2 style="font-size: 1.15rem; font-weight: 700; margin: 16px 0 8px; color: var(--text-primary);">$1</h2>');
+          formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong style="color: var(--text-primary); font-weight: 700;">$1</strong>');
+          formatted = formatted.replace(/`([^`]+)`/g, '<code style="background: var(--surface-raised); border: 1px solid var(--border-subtle); padding: 2px 5px; border-radius: 4px; font-family: var(--font-mono); font-size: 0.8125rem; color: #60A5FA;">$1</code>');
+          formatted = formatted.replace(/^\d+\.\s(.*$)/gim, '<div style="margin-left: 12px; margin-bottom: 4px;">• $1</div>');
+          return `<div style="white-space: pre-wrap;">${formatted}</div>`;
+        }
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function escapeAttr(str) {
+      return str.replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n');
+    }
+
+    function handleInputKeydown(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitMessage();
+      }
+    }
+
+    function submitMessage() {
+      if (isGenerating) return;
+      const input = document.getElementById('ai-user-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      input.value = '';
+      messages.push({ role: 'user', text });
+      renderMessages();
+
+      isGenerating = true;
+      document.getElementById('btn-send-message').disabled = true;
+
+      const aiResponseIndex = messages.length;
+      messages.push({ role: 'assistant', text: '' });
+
+      const sampleResponse = generateSimulatedResponse(text);
+      let charIdx = 0;
+      renderMessages();
+
+      const streamInterval = setInterval(() => {
+        charIdx += Math.floor(Math.random() * 4) + 2;
+        if (charIdx >= sampleResponse.length) {
+          charIdx = sampleResponse.length;
+          messages[aiResponseIndex].text = sampleResponse;
+          clearInterval(streamInterval);
+          isGenerating = false;
+          document.getElementById('btn-send-message').disabled = false;
+          renderMessages();
+        } else {
+          messages[aiResponseIndex].text = sampleResponse.substring(0, charIdx) + '▍';
+          renderMessages();
+        }
+      }, 25);
+    }
+
+    function generateSimulatedResponse(userQuery) {
+      return `Under the **ikarisz Ember Framework**, here is the validated architectural approach for: "${userQuery}":
+
+\`\`\`typescript
+// ikarisz-core/security/AuthorityEngine.ts
+export interface SecurityContext {
+  userId: string;
+  permissions: string[];
+  rateLimitTokens: number;
+}
+
+export class AuthorityService {
+  private static instance: AuthorityService;
+
+  public static getInstance(): AuthorityService {
+    if (!AuthorityService.instance) {
+      AuthorityService.instance = new AuthorityService();
+    }
+    return AuthorityService.instance;
+  }
+
+  public validateTransaction(ctx: SecurityContext, amount: number): boolean {
+    if (ctx.rateLimitTokens <= 0) {
+      throw new Error("RATE_LIMIT_EXCEEDED: Authority token pool depleted");
+    }
+    return amount > 0 && amount <= 50000;
+  }
+}
+\`\`\`
+
+### Verification Audit:
+1. **Zero External Dependence**: Operates completely in-memory with strict deterministic lifecycle hooks.
+2. **Tactile & Resilient**: High contrast dark surfaces with fail-closed security contracts.
+3. **Optimized Throughput**: Rejects anomalous spikes before executing heavy downstream routines.`;
+    }
+
+    function usePromptPreset(promptText) {
+      document.getElementById('ai-user-input').value = promptText;
+      submitMessage();
+    }
+
+    function startNewChat() {
+      messages = [];
+      renderMessages();
+      showToast('Started new conversation');
+    }
+
+    function clearConversation() {
+      messages = [];
+      renderMessages();
+      showToast('Conversation cleared');
+    }
+
+    function toggleAISkeleton() {
+      isAISkeleton = !isAISkeleton;
+      document.getElementById('ai-skeleton-label').innerText = isAISkeleton ? 'Disable Skeleton' : 'Skeleton';
+      renderHistory();
+      renderMessages();
+      showToast(isAISkeleton ? 'AI Skeleton Loading Preview' : 'Real Conversation Active');
+    }
+
+    function simulateAIReload() {
+      isAISkeleton = true;
+      renderHistory();
+      renderMessages();
+      showToast('Synthesizing conversation memory...');
+
+      setTimeout(() => {
+        isAISkeleton = false;
+        renderHistory();
+        renderMessages();
+        showToast('Conversational context loaded');
+      }, 1200);
+    }
+
+    function selectConversation(id, elem) {
+      document.querySelectorAll('.chat-history-item').forEach(el => el.classList.remove('active'));
+      elem.classList.add('active');
+      showToast('Loaded conversation session');
+    }
+
+    function handleModelChange(modelId) {
+      const model = IkariszData.ai.models.find(m => m.id === modelId);
+      if (model) {
+        document.getElementById('current-model-badge').innerText = model.name;
+        showToast(`Model switched to ${model.name}`);
+      }
+    }
+
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard!');
+      }).catch(() => {
+        showToast('Copied!');
+      });
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<span style="color: #60A5FA;">${IkariszIcons.check}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 250);
+      }, 3000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initAIIcons();
+      initModelSelector();
+      renderHistory();
+      renderMessages();
+    });
+  </script>
+</body>
+</html>

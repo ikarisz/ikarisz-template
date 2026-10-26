@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ikarisz - Unified WebApp Template Suite</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body {
+      background-color: var(--canvas);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      color: var(--text-primary);
+    }
+
+    /* Master Top Header - Rigen Ember Console Dark Glass */
+    .master-header {
+      min-height: 64px;
+      background-color: rgba(17, 16, 15, 0.85);
+      backdrop-filter: blur(16px) saturate(115%);
+      -webkit-backdrop-filter: blur(16px) saturate(115%);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      flex-shrink: 0;
+      z-index: 50;
+      position: relative;
+    }
+
+    .brand-section {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 10;
+    }
+
+    .template-switcher-wrapper {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 5;
+    }
+
+    .template-switcher {
+      display: flex;
+      background-color: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+      padding: 3px;
+      gap: 3px;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    .template-tab {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+      background: transparent;
+      cursor: pointer;
+      transition: all 140ms ease-out;
+      white-space: nowrap;
+    }
+
+    .template-tab:hover {
+      color: var(--text-primary);
+      background-color: var(--surface-hover);
+    }
+
+    .template-tab.active {
+      background-color: var(--surface-raised);
+      color: #FFFFFF;
+      border-color: var(--border-strong);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .controls-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    /* Responsive adjustments for Master Header */
+    @media (max-width: 960px) {
+      .master-header {
+        flex-direction: column;
+        padding: 12px 16px;
+        gap: 10px;
+        min-height: auto;
+      }
+      .template-switcher-wrapper {
+        position: static;
+        transform: none;
+        width: 100%;
+        order: 2;
+      }
+      .brand-section {
+        width: 100%;
+        justify-content: space-between;
+        order: 1;
+      }
+      .controls-section {
+        width: 100%;
+        justify-content: center;
+        order: 3;
+        flex-wrap: wrap;
+      }
+    }
+
+    .device-button {
+      border: 1px solid var(--border-subtle);
+      background-color: var(--surface-raised);
+      border-radius: 8px;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      cursor: pointer;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.4);
+      transition: all 140ms ease-out;
+    }
+
+    .device-button:hover {
+      background-color: var(--surface-hover);
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+      transform: translateY(-1px);
+    }
+
+    .device-button.active {
+      border-color: #2563EB;
+      color: #60A5FA;
+      background-color: rgba(37, 99, 235, 0.16);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    /* Viewport Area */
+    .master-stage {
+      flex: 1;
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      padding: 0;
+      background-color: var(--canvas);
+    }
+
+    .viewport-wrapper {
+      width: 100%;
+      height: 100%;
+      transition: width 0.3s cubic-bezier(0.16, 1, 0.3, 1), max-width 0.3s cubic-bezier(0.16, 1, 0.3, 1), padding 0.3s ease;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .viewport-wrapper.desktop {
+      max-width: 100%;
+      height: 100%;
+    }
+
+    .viewport-wrapper.tablet {
+      max-width: 820px;
+      height: calc(100% - 32px);
+      margin: 16px auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-modal);
+      box-shadow: var(--shadow-modal);
+      overflow: hidden;
+      background-color: var(--surface);
+    }
+
+    .viewport-wrapper.mobile {
+      max-width: 390px;
+      height: calc(100% - 32px);
+      margin: 16px auto;
+      border: 1px solid var(--border-subtle);
+      border-radius: 24px;
+      box-shadow: var(--shadow-modal);
+      overflow: hidden;
+      background-color: var(--surface);
+    }
+
+    @media (max-width: 860px) {
+      .viewport-wrapper.tablet {
+        max-width: 100%;
+        height: 100%;
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    @media (max-width: 450px) {
+      .viewport-wrapper.mobile {
+        max-width: 100%;
+        height: 100%;
+        margin: 0;
+        border: none;
+        border-radius: 0;
+        box-shadow: none;
+      }
+    }
+
+    .template-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background-color: var(--canvas);
+    }
+
+    /* Info Bar at Bottom */
+    .master-infobar {
+      height: 38px;
+      background-color: var(--surface);
+      border-top: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+    }
+
+    .pill-tag {
+      background-color: var(--surface-raised);
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+  <!-- Master Navigation Bar -->
+  <header class="master-header">
+    <!-- Brand -->
+    <div class="brand-section">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span id="master-logo"></span>
+        <div>
+          <span style="font-weight: 800; font-size: 1.1rem; color: var(--text-primary); letter-spacing: -0.02em;">ikarisz</span>
+          <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 4px; font-weight: 500;">Console</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center Template Switcher Tabs (Perfect Center Alignment) -->
+    <div class="template-switcher-wrapper">
+      <div class="template-switcher">
+        <button id="tab-saas" class="template-tab active" onclick="switchTemplate('saas')">
+          <span id="tab-icon-saas"></span>
+          <span>ikarisz SaaS</span>
+        </button>
+
+        <button id="tab-store" class="template-tab" onclick="switchTemplate('store')">
+          <span id="tab-icon-store"></span>
+          <span>ikarisz Store</span>
+        </button>
+
+        <button id="tab-ai" class="template-tab" onclick="switchTemplate('ai')">
+          <span id="tab-icon-ai"></span>
+          <span>ikarisz AI</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Controls & Device Frame Switchers -->
+    <div class="controls-section">
+      <!-- GitHub Repo Badge with Dynamic Star Count -->
+      <a href="https://github.com/ikarisz/ikarisz-template" target="_blank" rel="noopener noreferrer" class="github-repo-btn" id="github-repo-link" title="View ikarisz-template on GitHub">
+        <span id="icon-github" style="display: flex; align-items: center;"></span>
+        <span style="font-weight: 600; letter-spacing: -0.01em;">ikarisz-template</span>
+        <span class="github-star-pill" title="GitHub Stars">
+          <span id="icon-star" style="display: flex; align-items: center;"></span>
+          <span id="github-stars-count">0</span>
+        </span>
+      </a>
+
+      <div style="width: 1px; height: 20px; background-color: var(--border-subtle);"></div>
+
+      <!-- Skeleton Toggle -->
+      <button class="btn-secondary" style="font-size: 0.75rem; padding: 6px 12px;" onclick="triggerFrameSkeleton()">
+        <span id="icon-refresh"></span>
+        <span>Toggle Skeleton</span>
+      </button>
+
+      <button class="btn-subtle" style="font-size: 0.75rem; padding: 6px 12px;" onclick="triggerFrameSimulation()">
+        Simulate 1.2s Load
+      </button>
+
+      <div style="width: 1px; height: 20px; background-color: var(--border-subtle);"></div>
+
+      <!-- Device Frame Viewport Controls -->
+      <div style="display: flex; gap: 4px;">
+        <button id="btn-dev-desktop" class="device-button active" onclick="setDevice('desktop')" title="Desktop View (100%)">
+          <span id="icon-monitor"></span>
+        </button>
+        <button id="btn-dev-tablet" class="device-button" onclick="setDevice('tablet')" title="Tablet View (820px)">
+          <span id="icon-tablet"></span>
+        </button>
+        <button id="btn-dev-mobile" class="device-button" onclick="setDevice('mobile')" title="Mobile View (390px)">
+          <span id="icon-mobile"></span>
+        </button>
+      </div>
+
+      <div style="width: 1px; height: 20px; background-color: var(--border-subtle);"></div>
+
+      <!-- Standalone File Link -->
+      <a id="btn-open-standalone" href="saas.html" target="_blank" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px; text-decoration: none;" title="Open standalone HTML file in new tab">
+        <span id="icon-external"></span> Standalone
+      </a>
+    </div>
+  </header>
+
+  <!-- Viewport Stage -->
+  <main class="master-stage">
+    <div id="viewport-wrapper" class="viewport-wrapper desktop">
+      <iframe id="template-frame" class="template-iframe" src="saas.html"></iframe>
+    </div>
+  </main>
+
+  <!-- Infobar Footer -->
+  <footer class="master-infobar">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <span style="font-weight: 600; color: var(--text-primary);">ikarisz Ember Console</span>
+      <span class="pill-tag">Dark Glass 3D</span>
+      <span class="pill-tag">CTA: #2563EB</span>
+      <span class="pill-tag">Zero Emojis</span>
+      <a href="https://github.com/ikarisz/ikarisz-template" target="_blank" rel="noopener noreferrer" style="color: var(--text-muted); text-decoration: none; display: inline-flex; align-items: center; gap: 5px; font-weight: 500; transition: color 0.15s ease;" onmouseover="this.style.color='#FFFFFF'" onmouseout="this.style.color='var(--text-muted)'">
+        <span id="icon-footer-github" style="display: flex; align-items: center;"></span>
+        <span>github.com/ikarisz/ikarisz-template</span>
+      </a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span>Active: <strong id="active-template-name" style="color: #60A5FA;">ikarisz SaaS</strong></span>
+      <span>Viewport: <strong id="active-viewport-name" style="color: var(--text-primary);">Desktop (100%)</strong></span>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="icons.js"></script>
+  <script>
+    let activeTemplate = 'saas';
+    let activeDevice = 'desktop';
+
+    function initMasterIcons() {
+      document.getElementById('master-logo').innerHTML = IkariszIcons.logo;
+      document.getElementById('tab-icon-saas').innerHTML = IkariszIcons.dashboard;
+      document.getElementById('tab-icon-store').innerHTML = IkariszIcons.cart;
+      document.getElementById('tab-icon-ai').innerHTML = IkariszIcons.bot;
+      document.getElementById('icon-refresh').innerHTML = IkariszIcons.refresh;
+      document.getElementById('icon-monitor').innerHTML = IkariszIcons.monitor;
+      document.getElementById('icon-tablet').innerHTML = IkariszIcons.tablet;
+      document.getElementById('icon-mobile').innerHTML = IkariszIcons.smartphone;
+      document.getElementById('icon-external').innerHTML = IkariszIcons.arrowUpRight;
+      if (document.getElementById('icon-github')) {
+        document.getElementById('icon-github').innerHTML = IkariszIcons.github;
+      }
+      if (document.getElementById('icon-star')) {
+        document.getElementById('icon-star').innerHTML = IkariszIcons.star;
+      }
+      if (document.getElementById('icon-footer-github')) {
+        document.getElementById('icon-footer-github').innerHTML = IkariszIcons.github;
+      }
+      fetchGitHubStars();
+    }
+
+    async function fetchGitHubStars() {
+      const starEl = document.getElementById('github-stars-count');
+      if (!starEl) return;
+      try {
+        const res = await fetch('https://api.github.com/repos/ikarisz/ikarisz-template');
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.stargazers_count === 'number') {
+            starEl.textContent = data.stargazers_count;
+          }
+        }
+      } catch (e) {
+        console.debug('GitHub star fetch offline or rate-limited', e);
+      }
+    }
+
+    function switchTemplate(templateKey) {
+      activeTemplate = templateKey;
+      const iframe = document.getElementById('template-frame');
+      const standaloneBtn = document.getElementById('btn-open-standalone');
+
+      document.querySelectorAll('.template-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById(`tab-${templateKey}`).classList.add('active');
+
+      const fileMap = {
+        'saas': { file: 'saas.html', name: 'ikarisz SaaS Cloud' },
+        'store': { file: 'store.html', name: 'ikarisz Store Arsenal' },
+        'ai': { file: 'ai.html', name: 'ikarisz AI Intelligence' }
+      };
+
+      const meta = fileMap[templateKey];
+      iframe.src = meta.file;
+      standaloneBtn.href = meta.file;
+      document.getElementById('active-template-name').innerText = meta.name;
+    }
+
+    function setDevice(device) {
+      activeDevice = device;
+      const wrapper = document.getElementById('viewport-wrapper');
+      wrapper.className = `viewport-wrapper ${device}`;
+
+      document.querySelectorAll('.device-button').forEach(b => b.classList.remove('active'));
+      document.getElementById(`btn-dev-${device}`).classList.add('active');
+
+      const nameMap = {
+        'desktop': 'Desktop (100%)',
+        'tablet': 'Tablet Frame (820px)',
+        'mobile': 'Mobile Frame (390px)'
+      };
+      document.getElementById('active-viewport-name').innerText = nameMap[device];
+    }
+
+    function triggerFrameSkeleton() {
+      const iframe = document.getElementById('template-frame');
+      try {
+        const frameDoc = iframe.contentDocument || iframe.contentWindow.document;
+        if (activeTemplate === 'saas') {
+          frameDoc.getElementById('btn-toggle-skeleton').click();
+        } else if (activeTemplate === 'store') {
+          frameDoc.getElementById('btn-store-skeleton').click();
+        } else if (activeTemplate === 'ai') {
+          frameDoc.getElementById('btn-ai-skeleton').click();
+        }
+      } catch (e) {
+        console.warn('Iframe cross-origin or load timing', e);
+      }
+    }
+
+    function triggerFrameSimulation() {
+      const iframe = document.getElementById('template-frame');
+      try {
+        const win = iframe.contentWindow;
+        if (activeTemplate === 'saas' && win.simulateDataReload) {
+          win.simulateDataReload();
+        } else if (activeTemplate === 'store' && win.simulateStoreReload) {
+          win.simulateStoreReload();
+        } else if (activeTemplate === 'ai' && win.simulateAIReload) {
+          win.simulateAIReload();
+        }
+      } catch (e) {
+        console.warn('Simulation trigger error', e);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initMasterIcons();
+    });
+  </script>
+</body>
+</html>

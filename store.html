@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ikarisz Arsenal - Ember Console</title>
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: var(--canvas);
+      color: var(--text-primary);
+    }
+    .store-layout {
+      min-height: 100%;
+      background-color: var(--canvas);
+      display: flex;
+      flex-direction: column;
+    }
+    .store-navbar {
+      background-color: rgba(18, 16, 15, 0.85);
+      backdrop-filter: blur(16px) saturate(115%);
+      -webkit-backdrop-filter: blur(16px) saturate(115%);
+      border-bottom: 1px solid var(--border-subtle);
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.6);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      padding: 12px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .store-brand-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .store-search-section {
+      flex: 1;
+      max-width: 380px;
+    }
+    .store-search-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+      padding: 7px 12px;
+      width: 100%;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+    }
+    .store-actions-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .store-dev-tools {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .store-container {
+      max-width: 1360px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 28px 24px;
+      flex: 1;
+    }
+    .item-card {
+      background: var(--surface-raised-glass);
+      backdrop-filter: blur(16px) saturate(115%);
+      -webkit-backdrop-filter: blur(16px) saturate(115%);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-module);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: var(--inner-bevel), var(--shadow-md);
+      transition: transform 140ms ease-out, box-shadow 140ms ease-out, border-color 140ms ease-out;
+      position: relative;
+    }
+    .item-card:hover {
+      border-color: var(--border-strong);
+      box-shadow: var(--inner-bevel), var(--shadow-lg);
+      transform: translateY(-2px);
+    }
+    .item-visual-box {
+      height: 140px;
+      background-color: var(--surface);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-control);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+      position: relative;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+    }
+    .rarity-pill {
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 3px 8px;
+      border-radius: 4px;
+      border-width: 1px;
+      border-style: solid;
+    }
+    .rarity-Mythic {
+      background-color: rgba(37, 99, 235, 0.15);
+      border-color: rgba(37, 99, 235, 0.4);
+      color: #60A5FA;
+    }
+    .rarity-Legendary {
+      background-color: rgba(245, 158, 11, 0.15);
+      border-color: rgba(245, 158, 11, 0.4);
+      color: #FBBF24;
+    }
+    .rarity-Epic {
+      background-color: rgba(168, 85, 247, 0.15);
+      border-color: rgba(168, 85, 247, 0.4);
+      color: #C084FC;
+    }
+    .rarity-Rare {
+      background-color: rgba(70, 211, 154, 0.15);
+      border-color: rgba(70, 211, 154, 0.4);
+      color: #46D39A;
+    }
+    .rarity-Special {
+      background-color: var(--surface-pressed);
+      border-color: var(--border-strong);
+      color: var(--text-primary);
+    }
+
+    /* Cart Slide-Over Drawer */
+    .cart-drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(8, 8, 7, 0.75);
+      backdrop-filter: blur(10px);
+      z-index: 100;
+      display: none;
+      justify-content: flex-end;
+    }
+    .cart-drawer {
+      width: 420px;
+      max-width: 90%;
+      height: 100%;
+      background-color: var(--surface-raised);
+      border-left: 1px solid var(--border-strong);
+      box-shadow: var(--shadow-modal);
+      display: flex;
+      flex-direction: column;
+      animation: slideInRight 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes slideInRight {
+      from { transform: translateX(100%); }
+      to { transform: translateX(0); }
+    }
+
+    /* Store Responsive Breakpoints */
+    .store-item-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+    }
+
+    #category-pills-container {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      max-width: 100%;
+      padding: 2px 0 6px;
+      white-space: nowrap;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    #category-pills-container::-webkit-scrollbar {
+      display: none;
+      width: 0;
+      height: 0;
+    }
+
+    @media (max-width: 1100px) {
+      .store-navbar {
+        padding: 12px 20px;
+      }
+      .store-item-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .store-dev-tools {
+        display: none !important;
+      }
+      .store-navbar {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px 14px;
+        gap: 10px;
+      }
+      .store-navbar-top-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+      }
+      .store-search-section {
+        max-width: 100%;
+        width: 100%;
+      }
+      .store-banner {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 14px;
+        padding: 18px !important;
+      }
+      .store-banner-actions {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .store-banner-actions button {
+        width: 100%;
+      }
+      .store-container {
+        padding: 14px 12px;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .store-item-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .cart-drawer {
+        width: 100%;
+        max-width: 100%;
+      }
+      .cart-btn-text {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="store-layout">
+    <!-- Navbar -->
+    <header class="store-navbar">
+      <div class="store-navbar-top-row">
+        <!-- Brand -->
+        <div class="store-brand-section">
+          <span id="store-logo"></span>
+          <div>
+            <div style="font-weight: 800; font-size: 1.05rem; letter-spacing: -0.02em; color: var(--text-primary); line-height: 1.1;">ikarisz</div>
+            <div style="font-size: 0.6875rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Arsenal & Gear</div>
+          </div>
+        </div>
+
+        <!-- Right Actions (Balances + Cart + Dev Tools) -->
+        <div class="store-actions-section">
+          <!-- Dev Tools (Hidden on Mobile) -->
+          <div class="store-dev-tools">
+            <button id="btn-store-skeleton" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="toggleStoreSkeleton()">
+              <span id="icon-refresh"></span>
+              <span id="store-skeleton-label">Skeleton</span>
+            </button>
+            <button class="btn-subtle" style="font-size: 0.75rem; padding: 6px 10px;" onclick="simulateStoreReload()">
+              Simulate
+            </button>
+
+            <a href="https://github.com/ikarisz/ikarisz-template" target="_blank" rel="noopener noreferrer" class="github-repo-btn" style="text-decoration: none; padding: 5px 9px;" title="View repository on GitHub">
+              <span id="icon-store-github" style="display: flex; align-items: center;"></span>
+              <span class="github-star-pill" style="padding: 1px 6px;">
+                <span id="icon-store-star" style="display: flex; align-items: center;"></span>
+                <span id="store-stars-count">0</span>
+              </span>
+            </a>
+
+            <div style="width: 1px; height: 18px; background-color: var(--border-subtle);"></div>
+          </div>
+
+          <!-- Player Balances Pill -->
+          <div style="display: flex; align-items: center; gap: 6px; background-color: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); padding: 6px 10px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);">
+            <span id="icon-coins" style="color: #60A5FA;"></span>
+            <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-primary); white-space: nowrap;">
+              <span id="player-credits">42,850</span> <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">CR</span>
+            </div>
+            <button style="border: none; background: var(--cta-primary); color: #FFFFFF; border-radius: 4px; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: 2px;" onclick="topUpCredits()">+</button>
+          </div>
+
+          <!-- Cart Button -->
+          <button class="btn-primary" style="padding: 7px 12px;" onclick="openCart()">
+            <span id="icon-cart"></span>
+            <span class="cart-btn-text">Cart</span>
+            <span id="cart-counter-badge" style="background-color: #FFFFFF; color: #1E40AF; font-size: 0.7rem; font-weight: 800; padding: 1px 6px; border-radius: 9999px;">0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="store-search-section">
+        <div class="store-search-bar">
+          <span id="icon-search" style="color: var(--text-muted);"></span>
+          <input id="store-search-input" type="text" placeholder="Search weapons, suits, battle passes..." style="border: none; background: transparent; outline: none; font-size: 0.8125rem; width: 100%; color: var(--text-primary);" oninput="handleStoreSearch(this.value)" />
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Store Content -->
+    <main class="store-container">
+      <!-- Announcement Banner -->
+      <div class="card store-banner" style="margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; padding: 24px 32px;">
+        <div>
+          <div class="rarity-pill rarity-Mythic" style="display: inline-block; margin-bottom: 8px;">SEASON 4: ODYSSEY LIVE</div>
+          <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin: 0; letter-spacing: -0.02em;">ikarisz Official Armory</h1>
+          <p style="font-size: 0.875rem; color: var(--text-muted); margin: 6px 0 0 0;">All gear is server-validated and bound instantly to your account inventory.</p>
+        </div>
+        <div class="store-banner-actions" style="display: flex; gap: 10px;">
+          <button class="btn-secondary" onclick="filterCategory('Battle Pass')">Inspect Pass</button>
+          <button class="btn-primary" onclick="quickBuyItem('item-06')">Unlock Season Pass (1,000 CR)</button>
+        </div>
+      </div>
+
+      <!-- Filter & Sort Bar -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+        <!-- Category Pills -->
+        <div id="category-pills-container">
+          <!-- Generated via JS -->
+        </div>
+
+        <!-- Sort Select -->
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 0.8125rem; color: var(--text-muted); font-weight: 500;">Sort By:</span>
+          <select id="store-sort-select" style="background-color: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); padding: 6px 12px; font-size: 0.8125rem; color: var(--text-primary); outline: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);" onchange="handleSortChange(this.value)">
+            <option value="featured">Featured First</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="rating">Highest Rated</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Item Grid -->
+      <div id="item-grid" class="store-item-grid">
+        <!-- Generated via JS or Rendered as Skeleton -->
+      </div>
+    </main>
+  </div>
+
+  <!-- Cart Slide-Over Drawer -->
+  <div id="cart-drawer-overlay" class="cart-drawer-overlay" onclick="closeCartOnOverlay(event)">
+    <div class="cart-drawer">
+      <div style="padding: 20px 24px; border-bottom: 1px solid var(--border-subtle); display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span id="drawer-cart-icon" style="color: #60A5FA;"></span>
+          <h2 style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary); margin: 0;">Your Armory Cart</h2>
+        </div>
+        <button style="border: none; background: transparent; cursor: pointer; color: var(--text-muted);" onclick="closeCart()">
+          <span id="cart-close-icon"></span>
+        </button>
+      </div>
+
+      <!-- Cart Items List -->
+      <div id="cart-items-container" style="flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 14px;">
+        <!-- Populated via JS -->
+      </div>
+
+      <!-- Cart Summary & Checkout Footer -->
+      <div style="padding: 20px 24px; border-top: 1px solid var(--border-subtle); background-color: var(--surface);">
+        <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 6px;">
+          <span>Subtotal</span>
+          <span id="cart-subtotal" style="font-weight: 600; color: var(--text-primary);">0 Credits</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 12px;">
+          <span>Transaction Platform Fee</span>
+          <span style="font-weight: 600; color: var(--success);">0 CR (Free)</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 1.125rem; font-weight: 800; color: var(--text-primary); margin-bottom: 16px; padding-top: 8px; border-top: 1px solid var(--border-subtle);">
+          <span>Total Balance Due</span>
+          <span id="cart-total" style="color: #60A5FA;">0 Credits</span>
+        </div>
+
+        <button id="btn-checkout" class="btn-primary" style="width: 100%; padding: 12px; font-size: 0.9375rem;" onclick="processCheckout()">
+          Authorize Checkout
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Item Detail Modal -->
+  <div id="item-modal" style="display: none; position: fixed; inset: 0; background-color: rgba(8, 8, 7, 0.75); backdrop-filter: blur(10px); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background-color: var(--surface-raised); border-radius: var(--radius-modal); width: 520px; max-width: 90%; padding: 24px; box-shadow: var(--shadow-modal); border: 1px solid var(--border-strong);" id="item-modal-content">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Scripts -->
+  <script src="icons.js"></script>
+  <script src="mock-data.js"></script>
+  <script>
+    let isStoreSkeleton = false;
+    let activeCategory = 'All Items';
+    let searchQuery = '';
+    let sortMode = 'featured';
+    let cart = [];
+
+    function initStoreIcons() {
+      document.getElementById('store-logo').innerHTML = IkariszIcons.logo;
+      document.getElementById('icon-search').innerHTML = IkariszIcons.search;
+      document.getElementById('icon-refresh').innerHTML = IkariszIcons.refresh;
+      document.getElementById('icon-coins').innerHTML = IkariszIcons.coins;
+      document.getElementById('icon-cart').innerHTML = IkariszIcons.cart;
+      document.getElementById('drawer-cart-icon').innerHTML = IkariszIcons.cart;
+      document.getElementById('cart-close-icon').innerHTML = IkariszIcons.x;
+      if (document.getElementById('icon-store-github')) document.getElementById('icon-store-github').innerHTML = IkariszIcons.github;
+      if (document.getElementById('icon-store-star')) document.getElementById('icon-store-star').innerHTML = IkariszIcons.star;
+      fetchGitHubStars();
+    }
+
+    async function fetchGitHubStars() {
+      const starEl = document.getElementById('store-stars-count');
+      if (!starEl) return;
+      try {
+        const res = await fetch('https://api.github.com/repos/ikarisz/ikarisz-template');
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.stargazers_count === 'number') {
+            starEl.textContent = data.stargazers_count;
+          }
+        }
+      } catch (e) {}
+    }
+
+    function renderCategoryPills() {
+      const container = document.getElementById('category-pills-container');
+      container.innerHTML = IkariszData.store.categories.map(cat => {
+        const isActive = cat === activeCategory;
+        return `
+          <button class="btn-secondary" style="font-size: 0.8125rem; padding: 6px 14px; border-radius: 9999px; ${isActive ? 'background-color: var(--surface-pressed); color: #60A5FA; border-color: #2563EB; font-weight: 600; box-shadow: inset 0 1px 0 rgba(255,255,255,0.08);' : 'color: var(--text-muted);'}" onclick="filterCategory('${cat}')">
+            ${cat}
+          </button>
+        `;
+      }).join('');
+    }
+
+    function getItemVectorSvg(type) {
+      if (type === 'sword') return IkariszIcons.sword;
+      if (type === 'crosshair') return IkariszIcons.crosshair;
+      if (type === 'shield') return IkariszIcons.shield;
+      if (type === 'zap') return IkariszIcons.zap;
+      if (type === 'package') return IkariszIcons.package;
+      if (type === 'coins') return IkariszIcons.coins;
+      return IkariszIcons.package;
+    }
+
+    function renderItemGrid() {
+      const grid = document.getElementById('item-grid');
+
+      if (isStoreSkeleton) {
+        grid.innerHTML = Array(8).fill(0).map(() => `
+          <div class="item-card">
+            <div class="skeleton-box" style="height: 140px; margin-bottom: 14px;"></div>
+            <div class="skeleton-text" style="width: 35%; height: 10px; margin-bottom: 8px;"></div>
+            <div class="skeleton-text" style="width: 80%; height: 16px; margin-bottom: 8px;"></div>
+            <div class="skeleton-text" style="width: 100%; height: 10px; margin-bottom: 14px;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+              <div class="skeleton-text" style="width: 30%; height: 16px; margin: 0;"></div>
+              <div class="skeleton-box" style="width: 80px; height: 32px; border-radius: 6px;"></div>
+            </div>
+          </div>
+        `).join('');
+        return;
+      }
+
+      let items = IkariszData.store.items.filter(item => {
+        if (activeCategory !== 'All Items' && item.category !== activeCategory) return false;
+        if (searchQuery && !item.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+        return true;
+      });
+
+      if (sortMode === 'price-asc') items.sort((a, b) => a.price - b.price);
+      if (sortMode === 'price-desc') items.sort((a, b) => b.price - a.price);
+      if (sortMode === 'rating') items.sort((a, b) => parseFloat(b.rating) - parseFloat(a.rating));
+
+      if (items.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; padding: 48px; color: var(--text-muted); background: var(--surface-raised); border-radius: var(--radius-module); border: 1px solid var(--border-subtle);">No equipment found in the armory matching your filter.</div>`;
+        return;
+      }
+
+      grid.innerHTML = items.map(item => `
+        <div class="item-card">
+          <div>
+            <div class="item-visual-box">
+              <span class="rarity-pill rarity-${item.rarity}" style="position: absolute; top: 10px; left: 10px;">${item.rarity}</span>
+              <div style="color: #60A5FA; transform: scale(1.6);">
+                ${getItemVectorSvg(item.svgType)}
+              </div>
+              <button style="position: absolute; top: 10px; right: 10px; border: 1px solid var(--border-subtle); background: var(--surface-raised); border-radius: 6px; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text-muted);" onclick="inspectItem('${item.id}')" title="Inspect Stats">
+                ${IkariszIcons.search}
+              </button>
+            </div>
+
+            <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">${item.category} • Req. Lv ${item.levelReq}</div>
+            <div style="font-size: 0.9375rem; font-weight: 700; color: var(--text-primary); line-height: 1.3; margin-bottom: 6px;">${item.name}</div>
+            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 0 0 12px 0; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+              ${item.description}
+            </p>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--border-subtle);">
+            <div>
+              <div style="font-size: 0.7rem; color: var(--text-subdued); text-transform: uppercase; font-weight: 600;">Price</div>
+              <div style="font-size: 0.9375rem; font-weight: 800; color: var(--text-primary);">
+                ${item.price.toLocaleString()} <span style="font-size: 0.75rem; color: #60A5FA;">${item.currency === 'credits' ? 'CR' : 'SHD'}</span>
+              </div>
+            </div>
+            <button class="btn-primary" style="font-size: 0.75rem; padding: 6px 12px; min-height: 32px;" onclick="addToCart('${item.id}')">
+              ${IkariszIcons.plus} Add
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function toggleStoreSkeleton() {
+      isStoreSkeleton = !isStoreSkeleton;
+      document.getElementById('store-skeleton-label').innerText = isStoreSkeleton ? 'Disable Skeleton' : 'Skeleton';
+      renderItemGrid();
+      showToast(isStoreSkeleton ? 'Store Skeleton View Enabled' : 'Real Storefront Rendered');
+    }
+
+    function simulateStoreReload() {
+      isStoreSkeleton = true;
+      renderItemGrid();
+      showToast('Fetching latest in-game catalog...');
+
+      setTimeout(() => {
+        isStoreSkeleton = false;
+        renderItemGrid();
+        showToast('Store catalog successfully updated');
+      }, 1200);
+    }
+
+    function filterCategory(cat) {
+      activeCategory = cat;
+      renderCategoryPills();
+      renderItemGrid();
+    }
+
+    function handleStoreSearch(val) {
+      searchQuery = val;
+      renderItemGrid();
+    }
+
+    function handleSortChange(val) {
+      sortMode = val;
+      renderItemGrid();
+    }
+
+    function addToCart(itemId) {
+      const item = IkariszData.store.items.find(i => i.id === itemId);
+      if (!item) return;
+
+      const existing = cart.find(c => c.item.id === itemId);
+      if (existing) {
+        existing.quantity += 1;
+      } else {
+        cart.push({ item, quantity: 1 });
+      }
+
+      updateCartUI();
+      showToast(`Added ${item.name} to Cart`);
+    }
+
+    function updateCartUI() {
+      const totalCount = cart.reduce((sum, entry) => sum + entry.quantity, 0);
+      document.getElementById('cart-counter-badge').innerText = totalCount;
+
+      const container = document.getElementById('cart-items-container');
+      if (cart.length === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 48px 12px; color: var(--text-muted);">
+            <div style="margin-bottom: 12px; display: inline-block; color: var(--border-strong);">${IkariszIcons.cart}</div>
+            <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9375rem;">Your cart is empty</div>
+            <div style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 4px;">Browse the armory to acquire elite gear.</div>
+          </div>
+        `;
+        document.getElementById('cart-subtotal').innerText = '0 Credits';
+        document.getElementById('cart-total').innerText = '0 Credits';
+        document.getElementById('btn-checkout').disabled = true;
+        document.getElementById('btn-checkout').style.opacity = '0.5';
+        return;
+      }
+
+      document.getElementById('btn-checkout').disabled = false;
+      document.getElementById('btn-checkout').style.opacity = '1';
+
+      let totalPrice = 0;
+      container.innerHTML = cart.map(entry => {
+        const itemTotal = entry.item.price * entry.quantity;
+        totalPrice += itemTotal;
+        return `
+          <div style="display: flex; gap: 12px; padding: 12px; border: 1px solid var(--border-subtle); border-radius: var(--radius-control); background-color: var(--surface);">
+            <div style="width: 48px; height: 48px; background-color: var(--surface-raised); border: 1px solid var(--border-subtle); border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #60A5FA;">
+              ${getItemVectorSvg(entry.item.svgType)}
+            </div>
+            <div style="flex: 1;">
+              <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-primary); line-height: 1.2;">${entry.item.name}</div>
+              <div style="font-size: 0.75rem; color: #60A5FA; font-weight: 600; margin-top: 2px;">
+                ${entry.item.price.toLocaleString()} CR each
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                <button style="border: 1px solid var(--border-subtle); background: var(--surface-raised); color: var(--text-primary); border-radius: 4px; width: 22px; height: 22px; cursor: pointer;" onclick="changeQty('${entry.item.id}', -1)">-</button>
+                <span style="font-size: 0.8125rem; font-weight: 600; color: var(--text-primary);">${entry.quantity}</span>
+                <button style="border: 1px solid var(--border-subtle); background: var(--surface-raised); color: var(--text-primary); border-radius: 4px; width: 22px; height: 22px; cursor: pointer;" onclick="changeQty('${entry.item.id}', 1)">+</button>
+                <button style="border: none; background: transparent; color: var(--danger); font-size: 0.75rem; margin-left: auto; cursor: pointer;" onclick="removeFromCart('${entry.item.id}')">Remove</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('cart-subtotal').innerText = `${totalPrice.toLocaleString()} Credits`;
+      document.getElementById('cart-total').innerText = `${totalPrice.toLocaleString()} Credits`;
+    }
+
+    function changeQty(itemId, delta) {
+      const entry = cart.find(c => c.item.id === itemId);
+      if (!entry) return;
+      entry.quantity += delta;
+      if (entry.quantity <= 0) {
+        cart = cart.filter(c => c.item.id !== itemId);
+      }
+      updateCartUI();
+    }
+
+    function removeFromCart(itemId) {
+      cart = cart.filter(c => c.item.id !== itemId);
+      updateCartUI();
+      showToast('Item removed from cart');
+    }
+
+    function openCart() {
+      document.getElementById('cart-drawer-overlay').style.display = 'flex';
+      updateCartUI();
+    }
+
+    function closeCart() {
+      document.getElementById('cart-drawer-overlay').style.display = 'none';
+    }
+
+    function closeCartOnOverlay(e) {
+      if (e.target.id === 'cart-drawer-overlay') closeCart();
+    }
+
+    function processCheckout() {
+      if (cart.length === 0) return;
+      const totalCost = cart.reduce((sum, entry) => sum + (entry.item.price * entry.quantity), 0);
+      let currentCredits = IkariszData.store.userBalance.credits;
+
+      if (currentCredits < totalCost) {
+        showToast('Insufficient Credits! Please top up your wallet.');
+        return;
+      }
+
+      IkariszData.store.userBalance.credits -= totalCost;
+      document.getElementById('player-credits').innerText = IkariszData.store.userBalance.credits.toLocaleString();
+      const purchasedCount = cart.reduce((sum, entry) => sum + entry.quantity, 0);
+      cart = [];
+      updateCartUI();
+      closeCart();
+
+      showToast(`Transaction approved! ${purchasedCount} item(s) delivered to inventory.`);
+    }
+
+    function inspectItem(itemId) {
+      const item = IkariszData.store.items.find(i => i.id === itemId);
+      if (!item) return;
+
+      const modal = document.getElementById('item-modal');
+      const content = document.getElementById('item-modal-content');
+
+      let statsHtml = '';
+      for (const [k, v] of Object.entries(item.stats)) {
+        statsHtml += `
+          <div style="background-color: var(--surface); border: 1px solid var(--border-subtle); border-radius: 6px; padding: 8px 12px;">
+            <div style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">${k}</div>
+            <div style="font-size: 0.875rem; font-weight: 700; color: var(--text-primary);">${v}</div>
+          </div>
+        `;
+      }
+
+      content.innerHTML = `
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px;">
+          <div>
+            <span class="rarity-pill rarity-${item.rarity}">${item.rarity}</span>
+            <h2 style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); margin: 8px 0 0 0;">${item.name}</h2>
+            <div style="font-size: 0.75rem; color: var(--text-muted);">Category: ${item.category} • Required Rank: Lv ${item.levelReq}</div>
+          </div>
+          <button style="border: none; background: transparent; cursor: pointer; color: var(--text-muted);" onclick="closeInspectModal()">
+            ${IkariszIcons.x}
+          </button>
+        </div>
+
+        <div style="height: 160px; background-color: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; color: #60A5FA; transform: scale(1.4);">
+          ${getItemVectorSvg(item.svgType)}
+        </div>
+
+        <p style="font-size: 0.8125rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 16px;">${item.description}</p>
+
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 20px;">
+          ${statsHtml}
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid var(--border-subtle);">
+          <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary);">
+            ${item.price.toLocaleString()} <span style="font-size: 0.8125rem; color: #60A5FA;">Credits</span>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn-secondary" onclick="closeInspectModal()">Close</button>
+            <button class="btn-primary" onclick="addToCart('${item.id}'); closeInspectModal();">Add to Cart</button>
+          </div>
+        </div>
+      `;
+
+      modal.style.display = 'flex';
+    }
+
+    function closeInspectModal() {
+      document.getElementById('item-modal').style.display = 'none';
+    }
+
+    function quickBuyItem(itemId) {
+      addToCart(itemId);
+      openCart();
+    }
+
+    function topUpCredits() {
+      IkariszData.store.userBalance.credits += 5000;
+      document.getElementById('player-credits').innerText = IkariszData.store.userBalance.credits.toLocaleString();
+      showToast('Simulated +5,000 Credits deposit credited to your wallet');
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.innerHTML = `<span style="color: #60A5FA;">${IkariszIcons.check}</span><span>${message}</span>`;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 250);
+      }, 3000);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initStoreIcons();
+      renderCategoryPills();
+      renderItemGrid();
+      updateCartUI();
+    });
+  </script>
+</body>
+</html>
