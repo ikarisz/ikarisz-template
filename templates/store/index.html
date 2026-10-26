@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ikarisz Arsenal - Ember Console</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="../../shared/css/styles.css" />
   <style>
     html, body {
       height: 100%;
@@ -20,7 +20,7 @@
       flex-direction: column;
     }
     .store-navbar {
-      background-color: rgba(18, 16, 15, 0.85);
+      background-color: rgba(18, 16, 15, 0.88);
       backdrop-filter: blur(16px) saturate(115%);
       -webkit-backdrop-filter: blur(16px) saturate(115%);
       border-bottom: 1px solid var(--border-subtle);
@@ -28,11 +28,14 @@
       position: sticky;
       top: 0;
       z-index: 30;
-      padding: 12px 28px;
+      padding: 12px 24px;
+    }
+    .store-navbar-row {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
+      width: 100%;
     }
     .store-brand-section {
       display: flex;
@@ -41,9 +44,15 @@
       cursor: pointer;
       flex-shrink: 0;
     }
-    .store-search-section {
+    .store-search-section.desktop-search {
       flex: 1;
-      max-width: 380px;
+      max-width: 440px;
+      margin: 0 16px;
+    }
+    .store-search-section.mobile-search {
+      display: none;
+      width: 100%;
+      margin-top: 10px;
     }
     .store-search-bar {
       display: flex;
@@ -65,7 +74,7 @@
     .store-dev-tools {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .store-container {
       max-width: 1360px;
@@ -201,25 +210,36 @@
       }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 1024px) {
       .store-dev-tools {
         display: none !important;
       }
+      .store-search-section.desktop-search {
+        margin: 0 8px;
+      }
+    }
+
+    @media (max-width: 768px) {
       .store-navbar {
-        flex-direction: column;
-        align-items: stretch;
         padding: 10px 14px;
-        gap: 10px;
       }
-      .store-navbar-top-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
+      .store-search-section.desktop-search {
+        display: none !important;
       }
-      .store-search-section {
-        max-width: 100%;
-        width: 100%;
+      .store-search-section.mobile-search {
+        display: block !important;
+      }
+      .cart-btn-text {
+        display: none;
+      }
+      .store-actions-section {
+        gap: 6px;
+      }
+      .store-balance-pill {
+        padding: 4px 7px !important;
+      }
+      .store-balance-pill span {
+        font-size: 0.75rem !important;
       }
       .store-banner {
         flex-direction: column;
@@ -260,7 +280,7 @@
   <div class="store-layout">
     <!-- Navbar -->
     <header class="store-navbar">
-      <div class="store-navbar-top-row">
+      <div class="store-navbar-row">
         <!-- Brand -->
         <div class="store-brand-section">
           <span id="store-logo"></span>
@@ -270,52 +290,60 @@
           </div>
         </div>
 
+        <!-- Search Bar (Desktop / Tablet) -->
+        <div class="store-search-section desktop-search">
+          <div class="store-search-bar">
+            <span id="icon-search" style="color: var(--text-muted); display: flex;"></span>
+            <input id="store-search-input" type="text" placeholder="Search weapons, suits, battle passes..." style="border: none; background: transparent; outline: none; font-size: 0.8125rem; width: 100%; color: var(--text-primary);" oninput="handleStoreSearch(this.value)" />
+          </div>
+        </div>
+
         <!-- Right Actions (Balances + Cart + Dev Tools) -->
         <div class="store-actions-section">
-          <!-- Dev Tools (Hidden on Mobile) -->
+          <!-- Dev Tools (Desktop only) -->
           <div class="store-dev-tools">
-            <button id="btn-store-skeleton" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="toggleStoreSkeleton()">
+            <button id="btn-store-skeleton" class="btn-secondary" style="font-size: 0.75rem; padding: 5px 9px;" onclick="toggleStoreSkeleton()">
               <span id="icon-refresh"></span>
               <span id="store-skeleton-label">Skeleton</span>
             </button>
-            <button class="btn-subtle" style="font-size: 0.75rem; padding: 6px 10px;" onclick="simulateStoreReload()">
+            <button class="btn-subtle" style="font-size: 0.75rem; padding: 5px 9px;" onclick="simulateStoreReload()">
               Simulate
             </button>
 
-            <a href="https://github.com/ikarisz/ikarisz-template" target="_blank" rel="noopener noreferrer" class="github-repo-btn" style="text-decoration: none; padding: 5px 9px;" title="View repository on GitHub">
+            <a href="https://github.com/ikarisz/ikarisz-template" target="_blank" rel="noopener noreferrer" class="github-repo-btn" style="text-decoration: none; padding: 4px 8px;" title="View repository on GitHub">
               <span id="icon-store-github" style="display: flex; align-items: center;"></span>
-              <span class="github-star-pill" style="padding: 1px 6px;">
+              <span class="github-star-pill" style="padding: 1px 5px;">
                 <span id="icon-store-star" style="display: flex; align-items: center;"></span>
                 <span id="store-stars-count">0</span>
               </span>
             </a>
 
-            <div style="width: 1px; height: 18px; background-color: var(--border-subtle);"></div>
+            <div style="width: 1px; height: 16px; background-color: var(--border-subtle);"></div>
           </div>
 
           <!-- Player Balances Pill -->
-          <div style="display: flex; align-items: center; gap: 6px; background-color: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); padding: 6px 10px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);">
-            <span id="icon-coins" style="color: #60A5FA;"></span>
+          <div class="store-balance-pill" style="display: flex; align-items: center; gap: 6px; background-color: var(--surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-control); padding: 5px 10px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);">
+            <span id="icon-coins" style="color: #60A5FA; display: flex;"></span>
             <div style="font-size: 0.8125rem; font-weight: 700; color: var(--text-primary); white-space: nowrap;">
               <span id="player-credits">42,850</span> <span style="font-size: 0.7rem; color: var(--text-muted); font-weight: 500;">CR</span>
             </div>
-            <button style="border: none; background: var(--cta-primary); color: #FFFFFF; border-radius: 4px; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: 2px;" onclick="topUpCredits()">+</button>
+            <button style="border: none; background: var(--cta-primary); color: #FFFFFF; border-radius: 4px; width: 18px; height: 18px; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-left: 2px;" onclick="topUpCredits()" title="Deposit Credits">+</button>
           </div>
 
           <!-- Cart Button -->
-          <button class="btn-primary" style="padding: 7px 12px;" onclick="openCart()">
-            <span id="icon-cart"></span>
+          <button class="btn-primary" style="padding: 6px 12px; gap: 6px;" onclick="openCart()">
+            <span id="icon-cart" style="display: flex;"></span>
             <span class="cart-btn-text">Cart</span>
             <span id="cart-counter-badge" style="background-color: #FFFFFF; color: #1E40AF; font-size: 0.7rem; font-weight: 800; padding: 1px 6px; border-radius: 9999px;">0</span>
           </button>
         </div>
       </div>
 
-      <!-- Search Bar -->
-      <div class="store-search-section">
+      <!-- Search Bar (Mobile Only <= 768px) -->
+      <div class="store-search-section mobile-search">
         <div class="store-search-bar">
-          <span id="icon-search" style="color: var(--text-muted);"></span>
-          <input id="store-search-input" type="text" placeholder="Search weapons, suits, battle passes..." style="border: none; background: transparent; outline: none; font-size: 0.8125rem; width: 100%; color: var(--text-primary);" oninput="handleStoreSearch(this.value)" />
+          <span id="icon-search-mobile" style="color: var(--text-muted); display: flex;"></span>
+          <input id="store-search-input-mobile" type="text" placeholder="Search weapons, suits, battle passes..." style="border: none; background: transparent; outline: none; font-size: 0.8125rem; width: 100%; color: var(--text-primary);" oninput="handleStoreSearch(this.value)" />
         </div>
       </div>
     </header>
@@ -412,8 +440,8 @@
   <div id="toast-container" class="toast-container"></div>
 
   <!-- Scripts -->
-  <script src="icons.js"></script>
-  <script src="mock-data.js"></script>
+  <script src="../../shared/js/icons.js"></script>
+  <script src="../../shared/js/mock-data.js"></script>
   <script>
     let isStoreSkeleton = false;
     let activeCategory = 'All Items';
@@ -424,6 +452,7 @@
     function initStoreIcons() {
       document.getElementById('store-logo').innerHTML = IkariszIcons.logo;
       document.getElementById('icon-search').innerHTML = IkariszIcons.search;
+      if (document.getElementById('icon-search-mobile')) document.getElementById('icon-search-mobile').innerHTML = IkariszIcons.search;
       document.getElementById('icon-refresh').innerHTML = IkariszIcons.refresh;
       document.getElementById('icon-coins').innerHTML = IkariszIcons.coins;
       document.getElementById('icon-cart').innerHTML = IkariszIcons.cart;
@@ -566,6 +595,10 @@
 
     function handleStoreSearch(val) {
       searchQuery = val;
+      const desk = document.getElementById('store-search-input');
+      const mob = document.getElementById('store-search-input-mobile');
+      if (desk && desk.value !== val) desk.value = val;
+      if (mob && mob.value !== val) mob.value = val;
       renderItemGrid();
     }
 

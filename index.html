@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ikarisz - Unified WebApp Template Suite</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="shared/css/styles.css" />
   <style>
     body {
       background-color: var(--canvas);
@@ -17,36 +17,35 @@
 
     /* Master Top Header - Rigen Ember Console Dark Glass */
     .master-header {
-      min-height: 64px;
-      background-color: rgba(17, 16, 15, 0.85);
+      min-height: 62px;
+      background-color: rgba(17, 16, 15, 0.88);
       backdrop-filter: blur(16px) saturate(115%);
       -webkit-backdrop-filter: blur(16px) saturate(115%);
       border-bottom: 1px solid var(--border-subtle);
       box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.6);
-      display: flex;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 24px;
+      padding: 0 20px;
       flex-shrink: 0;
       z-index: 50;
       position: relative;
+      gap: 16px;
     }
 
     .brand-section {
       display: flex;
       align-items: center;
       gap: 12px;
-      z-index: 10;
+      justify-self: start;
+      min-width: 0;
     }
 
     .template-switcher-wrapper {
-      position: absolute;
-      left: 50%;
-      transform: translateX(-50%);
       display: flex;
       justify-content: center;
       align-items: center;
-      z-index: 5;
+      justify-self: center;
     }
 
     .template-switcher {
@@ -90,33 +89,34 @@
     .controls-section {
       display: flex;
       align-items: center;
-      gap: 10px;
-      z-index: 10;
+      gap: 8px;
+      justify-self: end;
+      min-width: 0;
     }
 
     /* Responsive adjustments for Master Header */
-    @media (max-width: 960px) {
+    @media (max-width: 1100px) {
       .master-header {
+        display: flex;
         flex-direction: column;
-        padding: 12px 16px;
+        padding: 10px 16px;
         gap: 10px;
         min-height: auto;
-      }
-      .template-switcher-wrapper {
-        position: static;
-        transform: none;
-        width: 100%;
-        order: 2;
       }
       .brand-section {
         width: 100%;
         justify-content: space-between;
-        order: 1;
+      }
+      .template-switcher-wrapper {
+        width: 100%;
+      }
+      .template-switcher {
+        width: 100%;
+        justify-content: center;
       }
       .controls-section {
         width: 100%;
         justify-content: center;
-        order: 3;
         flex-wrap: wrap;
       }
     }
@@ -253,7 +253,7 @@
 <body>
   <!-- Master Navigation Bar -->
   <header class="master-header">
-    <!-- Brand -->
+    <!-- Brand & GitHub Link -->
     <div class="brand-section">
       <div style="display: flex; align-items: center; gap: 8px;">
         <span id="master-logo"></span>
@@ -262,9 +262,21 @@
           <span style="font-size: 0.75rem; color: var(--text-muted); margin-left: 4px; font-weight: 500;">Console</span>
         </div>
       </div>
+
+      <div style="width: 1px; height: 18px; background-color: var(--border-subtle); margin: 0 4px;"></div>
+
+      <!-- GitHub Repo Badge with Dynamic Star Count -->
+      <a href="https://github.com/ikarisz/ikarisz-template" target="_blank" rel="noopener noreferrer" class="github-repo-btn" id="github-repo-link" title="View ikarisz-template on GitHub">
+        <span id="icon-github" style="display: flex; align-items: center;"></span>
+        <span style="font-weight: 600; letter-spacing: -0.01em;">ikarisz-template</span>
+        <span class="github-star-pill" title="GitHub Stars">
+          <span id="icon-star" style="display: flex; align-items: center;"></span>
+          <span id="github-stars-count">0</span>
+        </span>
+      </a>
     </div>
 
-    <!-- Center Template Switcher Tabs (Perfect Center Alignment) -->
+    <!-- Center Template Switcher Tabs (Perfect Center Alignment via CSS Grid) -->
     <div class="template-switcher-wrapper">
       <div class="template-switcher">
         <button id="tab-saas" class="template-tab active" onclick="switchTemplate('saas')">
@@ -286,29 +298,17 @@
 
     <!-- Controls & Device Frame Switchers -->
     <div class="controls-section">
-      <!-- GitHub Repo Badge with Dynamic Star Count -->
-      <a href="https://github.com/ikarisz/ikarisz-template" target="_blank" rel="noopener noreferrer" class="github-repo-btn" id="github-repo-link" title="View ikarisz-template on GitHub">
-        <span id="icon-github" style="display: flex; align-items: center;"></span>
-        <span style="font-weight: 600; letter-spacing: -0.01em;">ikarisz-template</span>
-        <span class="github-star-pill" title="GitHub Stars">
-          <span id="icon-star" style="display: flex; align-items: center;"></span>
-          <span id="github-stars-count">0</span>
-        </span>
-      </a>
-
-      <div style="width: 1px; height: 20px; background-color: var(--border-subtle);"></div>
-
       <!-- Skeleton Toggle -->
-      <button class="btn-secondary" style="font-size: 0.75rem; padding: 6px 12px;" onclick="triggerFrameSkeleton()">
+      <button class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="triggerFrameSkeleton()" title="Toggle Skeleton Loading State">
         <span id="icon-refresh"></span>
-        <span>Toggle Skeleton</span>
+        <span>Skeleton</span>
       </button>
 
-      <button class="btn-subtle" style="font-size: 0.75rem; padding: 6px 12px;" onclick="triggerFrameSimulation()">
-        Simulate 1.2s Load
+      <button class="btn-subtle" style="font-size: 0.75rem; padding: 6px 10px;" onclick="triggerFrameSimulation()" title="Simulate 1.2s Network Loading">
+        Simulate
       </button>
 
-      <div style="width: 1px; height: 20px; background-color: var(--border-subtle);"></div>
+      <div style="width: 1px; height: 18px; background-color: var(--border-subtle);"></div>
 
       <!-- Device Frame Viewport Controls -->
       <div style="display: flex; gap: 4px;">
@@ -323,10 +323,10 @@
         </button>
       </div>
 
-      <div style="width: 1px; height: 20px; background-color: var(--border-subtle);"></div>
+      <div style="width: 1px; height: 18px; background-color: var(--border-subtle);"></div>
 
       <!-- Standalone File Link -->
-      <a id="btn-open-standalone" href="saas.html" target="_blank" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px; text-decoration: none;" title="Open standalone HTML file in new tab">
+      <a id="btn-open-standalone" href="templates/saas/index.html" target="_blank" class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px; text-decoration: none;" title="Open standalone HTML file in new tab">
         <span id="icon-external"></span> Standalone
       </a>
     </div>
@@ -335,7 +335,7 @@
   <!-- Viewport Stage -->
   <main class="master-stage">
     <div id="viewport-wrapper" class="viewport-wrapper desktop">
-      <iframe id="template-frame" class="template-iframe" src="saas.html"></iframe>
+      <iframe id="template-frame" class="template-iframe" src="templates/saas/index.html"></iframe>
     </div>
   </main>
 
@@ -358,7 +358,7 @@
   </footer>
 
   <!-- Scripts -->
-  <script src="icons.js"></script>
+  <script src="shared/js/icons.js"></script>
   <script>
     let activeTemplate = 'saas';
     let activeDevice = 'desktop';
@@ -410,10 +410,16 @@
       document.getElementById(`tab-${templateKey}`).classList.add('active');
 
       const fileMap = {
-        'saas': { file: 'saas.html', name: 'ikarisz SaaS Cloud' },
-        'store': { file: 'store.html', name: 'ikarisz Store Arsenal' },
-        'ai': { file: 'ai.html', name: 'ikarisz AI Intelligence' }
+        'saas': { file: 'templates/saas/index.html', name: 'ikarisz SaaS Cloud' },
+        'store': { file: 'templates/store/index.html', name: 'ikarisz Store Arsenal' },
+        'ai': { file: 'templates/ai/index.html', name: 'ikarisz AI Intelligence' }
       };
+
+      const meta = fileMap[templateKey];
+      iframe.src = meta.file;
+      standaloneBtn.href = meta.file;
+      document.getElementById('active-template-name').innerText = meta.name;
+    }
 
       const meta = fileMap[templateKey];
       iframe.src = meta.file;
